@@ -1,11 +1,12 @@
 {
-  "name": "safeyt-video-editor",
+  "name": "@pbeejcom/safeyt-video-editor",
   "version": "0.1.0",
   "private": false,
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "files": ["dist/"],
+  "repository": {"url": "https://github.com/PBEEJcom/safeyt-video-editor.git"},
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
