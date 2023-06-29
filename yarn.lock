@@ -1669,6 +1669,24 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@pbeejcom/safeyt-video-editor@0.1.0":
+  version "0.1.0"
+  resolved "https://npm.pkg.github.com/download/@pbeejcom/safeyt-video-editor/0.1.0/3d753305fe5c55a2b006ba1700c4b704d9fb8ef4#3d753305fe5c55a2b006ba1700c4b704d9fb8ef4"
+  integrity sha512-tgfqFRRkZF+mJE+/ue68knFOjHIEZOXC3DDQNjVnJR74iOSBiF71fpXKXcCdypE2qR6wdfoF6zITzjvhHEEHIw==
+  dependencies:
+    "@testing-library/jest-dom" "^5.14.1"
+    "@testing-library/react" "^13.0.0"
+    "@testing-library/user-event" "^13.2.1"
+    "@types/jest" "^27.0.1"
+    "@types/node" "^16.7.13"
+    "@types/react" "^18.0.0"
+    "@types/react-dom" "^18.0.0"
+    react "^18.2.0"
+    react-dom "^18.2.0"
+    react-scripts "5.0.1"
+    typescript "^4.4.2"
+    web-vitals "^2.1.0"
+
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"

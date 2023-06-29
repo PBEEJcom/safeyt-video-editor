@@ -1,16 +1,21 @@
 {
   "name": "@pbeejcom/safeyt-video-editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "files": ["dist/"],
-  "repository": {"url": "https://github.com/PBEEJcom/safeyt-video-editor.git"},
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "url": "https://github.com/PBEEJcom/safeyt-video-editor.git"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
+    "@pbeejcom/safeyt-video-editor": "0.1.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
