@@ -1669,10 +1669,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@pbeejcom/safeyt-video-editor@0.1.0":
-  version "0.1.0"
-  resolved "https://npm.pkg.github.com/download/@pbeejcom/safeyt-video-editor/0.1.0/3d753305fe5c55a2b006ba1700c4b704d9fb8ef4#3d753305fe5c55a2b006ba1700c4b704d9fb8ef4"
-  integrity sha512-tgfqFRRkZF+mJE+/ue68knFOjHIEZOXC3DDQNjVnJR74iOSBiF71fpXKXcCdypE2qR6wdfoF6zITzjvhHEEHIw==
+"@pbeejcom/safeyt-video-editor@0.1.1":
+  version "0.1.1"
+  resolved "https://npm.pkg.github.com/download/@pbeejcom/safeyt-video-editor/0.1.1/dc12706f40757afb3844096eb910f1da30c8eb81#dc12706f40757afb3844096eb910f1da30c8eb81"
+  integrity sha512-GtYddfIUqib7Ozi4WHKSoFwRaSEoEcPNhS0d8gwlQ7MceoRc42NQTRb5pdIT/tjHX9SipogpxhT75KKZgKzfcQ==
   dependencies:
     "@testing-library/jest-dom" "^5.14.1"
     "@testing-library/react" "^13.0.0"
