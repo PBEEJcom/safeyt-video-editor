@@ -1,12 +1,14 @@
 {
   "name": "@pbeejcom/safeyt-video-editor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "type": "module",
   "types": "dist/index.d.ts",
   "files": [
     "dist/index.js",
-    "dist/index.js.map"
+    "dist/index.js.map",
+    "dist/index.d.ts",
+    "dist/types"
   ],
   "main": "dist/index.js",
   "repository": {
