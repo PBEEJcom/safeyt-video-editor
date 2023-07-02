@@ -4,7 +4,8 @@
   "private": false,
   "type": "module",
   "files": [
-    "dist/"
+    "dist/index.js",
+    "dist/index.js.map"
   ],
   "repository": {
     "url": "https://github.com/PBEEJcom/safeyt-video-editor.git"
