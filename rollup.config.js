@@ -4,14 +4,16 @@ import typescript from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
 import external from 'rollup-plugin-peer-deps-external';
 import postcss from 'rollup-plugin-postcss';
+import dts from 'rollup-plugin-dts';
 
-const config = {
+
+const config = [{
     input: 'src/index.tsx',
     output: {
             dir: "dist",
             format: 'esm',
             sourcemap: true
-        },
+    },
     plugins: [
         external(),
         resolve(),
@@ -20,6 +22,12 @@ const config = {
         postcss(),
         terser()
     ]
-}
+},
+{
+    input: 'src/index.d.ts',
+    output: [{ file: 'dist/index.d.ts', format: "esm" }],
+    external: [/\.css$/],
+    plugins: [dts()],
+},]
 
 export default config;
