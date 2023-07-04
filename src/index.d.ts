@@ -1,3 +1,3 @@
 declare module '@pbeejcom/safeyt-video-editor' {
-    export default class EditorControlBar extends React.FC<any> {}
+    export default class EditorControlBar extends React.ElementType<any> {}
 };
