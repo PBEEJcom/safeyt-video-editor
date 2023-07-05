@@ -1,3 +1,3 @@
 import React from "react";
-declare const EditorControlBar: (props: any) => React.JSX.Element;
+declare const EditorControlBar: React.FC<any>;
 export default EditorControlBar;
