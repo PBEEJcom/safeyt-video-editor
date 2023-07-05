@@ -1,6 +1,6 @@
 import React from "react";
 
-const EditorControlBar: React.FC<React.JSX.Element> = (props: any) => {
+const EditorControlBar: React.FC<any> = (props: any) => {
 return(
   <div>
     THIS IS THE EDITOR CONTROL BAR!
