@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.aa-Panel {
+  z-index: 12000 !important;
+}
+
+.aa-PanelLayout {
+  max-height: 300px !important;
+}
