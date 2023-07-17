@@ -110,60 +110,41 @@ const SafeYT = (props: SafeYTDialogProps) => {
   const encodedVideoInformation = YouTube.getEncodedSafeYTVideoInformation(YouTube.extractVideoId(props.youTubeLink), skips, videoBounds);
 
   return (
-    <Dialog open={props.open} onClose={handleSave}>
-      <DialogTitle>Edit Video</DialogTitle>
         <div className='flex flex-auto items-center justify-center flex-col p-3'>
-          {props.youTubeLink && (
-            <Fragment>
-              <div className='w-[500px] h-[300px]'>
-                <VideoPlayer key={encodedVideoInformation} encodedVideoInformation={encodedVideoInformation} />
-              </div>
-              <div>
-                <p>Video</p>
+      {props.youTubeLink && (
+        <Fragment>
+          <div className='w-[500px] h-[300px]'>
+            <VideoPlayer key={encodedVideoInformation} encodedVideoInformation={encodedVideoInformation} />
+          </div>
+          <div>
+            <p>Video</p>
+            <Input
+              placeholder='start time'
+              value={videoBounds?.start}
+              onChange={(e: any) => onVideoBoundsStartChange(e?.target?.value)} />
+            <Input
+              placeholder='end time'
+              value={videoBounds?.end}
+              onChange={(e: any) => onVideoBoundsEndChange(e?.target?.value)} />
+
+            <p>Skips</p>
+            {skips.map((skip, skipIndex) => (
+              <div key={skipIndex}>
                 <Input
                   placeholder='start time'
-                  value={videoBounds?.start}
-                  onChange={(e: any) =>
-                    onVideoBoundsStartChange(e?.target?.value)
-                  }
-                />
+                  value={skip.start}
+                  onChange={(e: any) => onSkipStartChanged(skipIndex, e?.target?.value)} />
                 <Input
                   placeholder='end time'
-                  value={videoBounds?.end}
-                  onChange={(e: any) =>
-                    onVideoBoundsEndChange(e?.target?.value)
-                  }
-                />
-
-                <p>Skips</p>
-                {skips.map((skip, skipIndex) => (
-                  <div key={skipIndex}>
-                    <Input
-                      placeholder='start time'
-                      value={skip.start}
-                      onChange={(e: any) =>
-                        onSkipStartChanged(skipIndex, e?.target?.value)
-                      }
-                    />
-                    <Input
-                      placeholder='end time'
-                      value={skip.end}
-                      onChange={(e: any) =>
-                        onSkipEndChanged(skipIndex, e?.target?.value)
-                      }
-                    />
-                  </div>
-                ))}
-                <Button onClick={onAddSkip}>Add Skip</Button>
+                  value={skip.end}
+                  onChange={(e: any) => onSkipEndChanged(skipIndex, e?.target?.value)} />
               </div>
-            </Fragment>
-          )}
-      </div>
-      <DialogActions>
-        <Button onClick={handleCancel}>Discard</Button>
-        <Button onClick={() => handleSave({}, "Save")}>Save</Button>
-      </DialogActions>
-    </Dialog>
+            ))}
+            <Button onClick={onAddSkip}>Add Skip</Button>
+          </div>
+        </Fragment>
+      )}
+    </div>
   );
 };
 
