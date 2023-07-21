@@ -8,6 +8,13 @@ export interface YTPlayerProps {
   encodedVideoInformation: string;
 }
 
+// This component does not need to be aware of changes in skips
+// consider changing the prop interface to include only the values needed
+// in order to avoid rendering when the skips change (i.e. only render when
+// the YouTube link changes??)
+
+// But then how will the editorcontrolbar receive its skips prop AND the player prop??
+
 const YTPlayer = (props: YTPlayerProps) => {
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
@@ -89,6 +96,7 @@ const YTPlayer = (props: YTPlayerProps) => {
     // eslint-disable-next-line
     // @ts-ignore
     YT.ready(() => {
+      console.log("i got run")
       if (!videoId) {
         return;
       }
@@ -124,7 +132,7 @@ const YTPlayer = (props: YTPlayerProps) => {
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
 
   return (
-    <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
+    <><div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
       <div className='h-full w-full relative overflow-hidden'>
         <div id='player' />
       </div>
@@ -132,7 +140,7 @@ const YTPlayer = (props: YTPlayerProps) => {
       <div className='absolute top-0 h-full w-full flex flex-col'>
         <div className='flex items-center justify-center flex-auto'>
           {!isPlaying && (
-            <button className='mt-[51px] w-[70px] h-[48px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
+            <button className='w-[70px] h-[48px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
               <svg
                 className='mr-[2px]'
                 xmlns='http://www.w3.org/2000/svg'
@@ -147,19 +155,21 @@ const YTPlayer = (props: YTPlayerProps) => {
             </button>
           )}
         </div>
-
-        <VideoControls
-          player={player}
-          isPlaying={isPlaying}
-          isFullscreen={isFullscreen}
-          skips={skips}
-          videoBounds={videoBounds}
-          onPlayVideo={playVideo}
-          onPauseVideo={pauseVideo}
-          onToggleFullscreen={onToggleFullscreen}
-        />
       </div>
+
     </div>
+    <div className="absolute w-[500px]">
+    <VideoControls
+        player={player}
+        isPlaying={isPlaying}
+        isFullscreen={isFullscreen}
+        skips={skips}
+        videoBounds={videoBounds}
+        onPlayVideo={playVideo}
+        onPauseVideo={pauseVideo}
+        onToggleFullscreen={onToggleFullscreen} />
+    </div>
+    </>
   );
 };
 

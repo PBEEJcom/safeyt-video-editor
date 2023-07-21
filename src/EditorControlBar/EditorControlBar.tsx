@@ -129,7 +129,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
   }, [props.isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile]);
 
   return (
-    <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700 ${(props.isPlaying && !isMobile) ? 'opacity-0 hover:opacity-100' : ''}`}>
+    <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
       <div className='flex flex-[0_0_10px] items-center justify-center py-[10px]'>
         <input 
           ref={scrubber}
@@ -137,8 +137,18 @@ const EditorControlBar = (props: VideoControlsProps) => {
           min='0'
           max={duration}
           onInput={onScrub}
-          className='appearance-none w-full h-[3px] bg-[#FFFFFF3C] rounded-[5px] bg-gradient-to-r from-[#BC335B] to-[#BC335B] bg-no-repeat bg-0'
+          className='appearance-none w-full h-[7px] bg-[#BC335B] rounded-[5px]'
         />
+        { props.skips?.map((skip, i) => {
+          if (!skip.start || !skip.end){
+            return (<div></div>);
+          }
+
+          let leftPercent = parseFormattedTime(skip.start)/duration*100
+          let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
+
+          return (<div className={"bg-[white] h-[7px] absolute border-t border-b border-[#BC335B]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+        })}
       </div>
       <div className='flex align-center flex-auto'>
         {!props.isPlaying ? (
