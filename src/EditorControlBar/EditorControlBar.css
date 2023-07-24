@@ -8,6 +8,8 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 0 2px 0 #555;
   transition: background .3s ease-in-out;
   border: solid #BC335B 2px;
+  z-index: 10;
+  position: relative;
 }
 
 input[type=range]::-webkit-slider-runnable-track {

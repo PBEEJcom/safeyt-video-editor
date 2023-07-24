@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { RefObject } from 'react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import VideoControls from '../EditorControlBar/EditorControlBar';
 import { parseFormattedTime } from '../Utils/Time';
 import './VideoPlayer.css'
+import { TimeSegment } from '../Utils/YouTube';
 
 export interface YTPlayerProps {
-  encodedVideoInformation: string;
+  videoId: string | undefined;
+  videoBounds: TimeSegment | undefined;
+  onSetPlayer: (player: YT.Player) => void;
+  onSetPlayerState: (playerState: YT.PlayerState) => void;
+  playerContainer: RefObject<HTMLDivElement>;
+  onPlayVideo: () => void;
 }
 
 // This component does not need to be aware of changes in skips
@@ -18,93 +23,30 @@ export interface YTPlayerProps {
 const YTPlayer = (props: YTPlayerProps) => {
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const playerContainer = useRef<HTMLDivElement>(null);
-
-  const { videoId, skips, videoBounds } = useMemo(() => {
-    try {
-      return JSON.parse(atob(props.encodedVideoInformation));
-    } catch {
-      return {
-        videoId: undefined,
-        skips: [],
-        videoBounds: undefined,
-      }
-    }
-  }, [props.encodedVideoInformation]);
 
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
-    // @ts-ignore
+    props.onSetPlayer(event.target);
     setPlayer(event.target);
   }, []);
 
   const onPlayerStateChange = useCallback((event: YT.OnStateChangeEvent) => {
+    props.onSetPlayerState(event.data);
     setPlayerState(event.data);
   }, []);
-
-  const onToggleFullscreen = useCallback(async () => {
-    if (playerContainer.current) {
-      // eslint-disable-next-line
-      // @ts-ignore
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        try {
-          if (document.exitFullscreen) {
-            await document.exitFullscreen();
-            // eslint-disable-next-line
-            // @ts-ignore
-          } else if (document.webkitExitFullscreen) {
-            alert('webkitExitFullscreen');
-            // eslint-disable-next-line
-            // @ts-ignore
-            document.webkitExitFullscreen();
-          }
-          setIsFullscreen(false);
-        } catch (error) {
-          console.error(error);
-        }
-      } else {
-        try {
-          if (playerContainer.current.requestFullscreen) {
-            await playerContainer.current.requestFullscreen();
-            setIsFullscreen(true);
-
-            // eslint-disable-next-line
-            // @ts-ignore
-          } else if (playerContainer.current.webkitRequestFullscreen) {
-
-            // eslint-disable-next-line
-            // @ts-ignore
-            playerContainer.current.webkitRequestFullscreen();
-            setIsFullscreen(true);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
-  }, []);
-
-  const playVideo = useCallback(() => {
-    player?.playVideo();
-  }, [player]);
-
-  const pauseVideo = useCallback(() => {
-    player?.pauseVideo();
-  }, [player]);
 
   useEffect(() => {
     // eslint-disable-next-line
     // @ts-ignore
     YT.ready(() => {
       console.log("i got run")
-      if (!videoId) {
+      if (!props.videoId) {
         return;
       }
 
       new YT.Player('player', {
         height: '100%',
         width: '100%',
-        videoId,
+        videoId: props.videoId,
         host: 'https://www.youtube-nocookie.com',
         events: {
           onReady: onPlayerReady,
@@ -122,17 +64,17 @@ const YTPlayer = (props: YTPlayerProps) => {
           fs: 0,
           origin: 'https://pbeej.com',
           mute: 0,
-          start: videoBounds?.start ? parseFormattedTime(videoBounds.start) : undefined,
-          end: videoBounds?.end ? parseFormattedTime(videoBounds.end) : undefined,
+          start: props.videoBounds?.start ? parseFormattedTime(props.videoBounds.start) : undefined,
+          end: props.videoBounds?.end ? parseFormattedTime(props.videoBounds.end) : undefined,
         },
       });
     });
-  }, [videoId, videoBounds, onPlayerReady, onPlayerStateChange]);
+  }, [props.videoId, props.videoBounds, onPlayerReady, onPlayerStateChange]);
 
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
 
   return (
-    <><div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
+    <><div ref={props.playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
       <div className='h-full w-full relative overflow-hidden'>
         <div id='player' />
       </div>
@@ -140,7 +82,7 @@ const YTPlayer = (props: YTPlayerProps) => {
       <div className='absolute top-0 h-full w-full flex flex-col'>
         <div className='flex items-center justify-center flex-auto'>
           {!isPlaying && (
-            <button className='w-[70px] h-[48px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
+            <button className='w-[70px] h-[48px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={props.onPlayVideo}>
               <svg
                 className='mr-[2px]'
                 xmlns='http://www.w3.org/2000/svg'
@@ -156,18 +98,6 @@ const YTPlayer = (props: YTPlayerProps) => {
           )}
         </div>
       </div>
-
-    </div>
-    <div className="absolute w-[500px]">
-    <VideoControls
-        player={player}
-        isPlaying={isPlaying}
-        isFullscreen={isFullscreen}
-        skips={skips}
-        videoBounds={videoBounds}
-        onPlayVideo={playVideo}
-        onPauseVideo={pauseVideo}
-        onToggleFullscreen={onToggleFullscreen} />
     </div>
     </>
   );

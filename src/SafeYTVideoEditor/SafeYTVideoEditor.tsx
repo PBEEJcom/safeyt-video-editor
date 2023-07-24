@@ -1,9 +1,10 @@
 import { Dialog, Input, Button, DialogTitle, DialogActions } from '@mui/material';
-import { Fragment, useCallback, useState } from 'react';
+import { Fragment, RefObject, useCallback, useRef, useState } from 'react';
 import VideoPlayer from '../VideoPlayer/VideoPlayer';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { parseFormattedTime } from '../Utils/Time';
 import React from 'react';
+import EditorControlBar from '../EditorControlBar/EditorControlBar';
 
 export interface SafeYTDialogProps {
   open: boolean;
@@ -12,8 +13,25 @@ export interface SafeYTDialogProps {
 }
 
 const SafeYT = (props: SafeYTDialogProps) => {
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [skips, setSkips] = useState<TimeSegment[]>([]);
   const [videoBounds, setVideoBounds] = useState<TimeSegment>();
+  const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
+  const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
+
+  let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
+
+  // const { videoId, skips, videoBounds } = useMemo(() => {
+  //   try {
+  //     return JSON.parse(atob(props.encodedVideoInformation));
+  //   } catch {
+  //     return {
+  //       videoId: undefined,
+  //       skips: [],
+  //       videoBounds: undefined,
+  //     }
+  //   }
+  // }, [props.encodedVideoInformation]);
 
   const onVideoBoundsStartChange = useCallback(
     (newStart: string = '') => {
@@ -101,21 +119,36 @@ const SafeYT = (props: SafeYTDialogProps) => {
     props.onClose(YouTube.getSafeYtLink(props.youTubeLink, skips, videoBounds));
   }
 
+  const playVideo = useCallback(() => {
+    player?.playVideo();
+  }, [player]);
+
   const handleCancel = () => {
     setSkips([]);
     setVideoBounds(undefined);
     props.onClose(YouTube.getSafeYtLink(props.youTubeLink, [], undefined));
   }
 
-  const encodedVideoInformation = YouTube.getEncodedSafeYTVideoInformation(YouTube.extractVideoId(props.youTubeLink), skips, videoBounds);
+  //const encodedVideoInformation = YouTube.getEncodedSafeYTVideoInformation(YouTube.extractVideoId(props.youTubeLink), skips, videoBounds);
+  const videoId = YouTube.extractVideoId(props.youTubeLink)
 
   return (
         <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {props.youTubeLink && (
         <Fragment>
           <div className='w-[500px] h-[300px]'>
-            <VideoPlayer key={encodedVideoInformation} encodedVideoInformation={encodedVideoInformation} />
+            <VideoPlayer key={videoId} videoId={videoId} videoBounds={videoBounds} onSetPlayer={setPlayer} onSetPlayerState={setPlayerState} playerContainer={playerContainer} onPlayVideo={playVideo}/>
           </div>
+          <div className="relative w-[500px]">
+            <EditorControlBar
+                player={player}
+                isFullscreen={isFullscreen}
+                skips={skips}
+                videoBounds={videoBounds}
+                playerState={playerState}
+                onPlayVideo={playVideo}
+                playerContainer={playerContainer} />
+            </div>
           <div>
             <p>Video</p>
             <Input

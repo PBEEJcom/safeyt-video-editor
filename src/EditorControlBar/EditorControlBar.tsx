@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
 import { parseFormattedTime, getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
 import './EditorControlBar.css'
@@ -6,17 +6,18 @@ import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
 
 export interface VideoControlsProps {
-  isPlaying: boolean;
   isFullscreen: boolean;
   player?: YT.Player;
   skips?: TimeSegment[];
   videoBounds?: TimeSegment;
   onPlayVideo(): void;
-  onPauseVideo(): void;
-  onToggleFullscreen(): void;
+  playerContainer: RefObject<HTMLDivElement>;
+  playerState: YT.PlayerState;
+  onPlayVideo: () => void;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
+  console.log("player" + props.player)
   const videoStartMs = props.videoBounds?.start ? parseFormattedTime(props.videoBounds.start) : 0;
   const videoEndMs = props.videoBounds?.end ? parseFormattedTime(props.videoBounds.end) : props.player?.getDuration() || 0;
   const duration = videoEndMs - videoStartMs;
@@ -26,17 +27,61 @@ const EditorControlBar = (props: VideoControlsProps) => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const isMobile = useMediaQuery({ query: '(max-width: 985px)' });
 
+  const isPlaying = !!props.player && props.playerState === YT.PlayerState.PLAYING
+
+  const onToggleFullscreen = useCallback(async () => {
+    if (props.playerContainer.current) {
+      // eslint-disable-next-line
+      // @ts-ignore
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        try {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+            // eslint-disable-next-line
+            // @ts-ignore
+          } else if (document.webkitExitFullscreen) {
+            alert('webkitExitFullscreen');
+            // eslint-disable-next-line
+            // @ts-ignore
+            document.webkitExitFullscreen();
+          }
+          // setIsFullscreen(false);
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        try {
+          if (props.playerContainer.current.requestFullscreen) {
+            await props.playerContainer.current.requestFullscreen();
+            // setIsFullscreen(true);
+
+            // eslint-disable-next-line
+            // @ts-ignore
+          } else if (playerContainer.current.webkitRequestFullscreen) {
+
+            // eslint-disable-next-line
+            // @ts-ignore
+            playerContainer.current.webkitRequestFullscreen();
+            // setIsFullscreen(true);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+  }, []);
+
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
       if (currentTime >= duration && scrubber.current) {
         scrubber.current.style.backgroundSize = '100% 100%';
         scrubber.current.value = duration.toString();
         props.player?.seekTo(videoStartMs, true);
-        props.onPauseVideo();
+        pauseVideo();
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [duration, props.player, props.onPauseVideo, scrubber, props.skips]
+    [duration, props.player, scrubber, props.skips]
   );
 
   const seekVideoTo = useCallback(
@@ -51,6 +96,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
     },
     [checkForEndOfVideo, duration, props.player, videoStartMs]
   );
+
+  const pauseVideo = useCallback(() => {
+    props.player?.pauseVideo();
+  }, [props.player]);
 
   const checkForEdits = useCallback(
     (currentTime: number): boolean => {
@@ -107,7 +156,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
   }, [props.player]);
 
   useEffect(() => {
-    const updateInterval = props.isPlaying
+    const updateInterval = isPlaying
       ? window.setInterval(() => {
           const newTime = Math.ceil(props.player?.getCurrentTime() || 0) + 1 - videoStartMs;
           setCurrentTime(newTime);
@@ -126,7 +175,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [props.isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile]);
 
   return (
     <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
@@ -147,11 +196,15 @@ const EditorControlBar = (props: VideoControlsProps) => {
           let leftPercent = parseFormattedTime(skip.start)/duration*100
           let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
 
-          return (<div className={"bg-[white] h-[7px] absolute border-t border-b border-[#BC335B]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+
+          console.log(`${skip.start} start; ${skip.end} end; ${duration} duration;`)
+          console.log(`${leftPercent}% left; ${widthPercent}% width;`)
+
+          return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] h-[7px] absolute border-t border-b border-[#BC335B] z-[0]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
         })}
       </div>
       <div className='flex align-center flex-auto'>
-        {!props.isPlaying ? (
+        {!isPlaying ? (
           <button className='flex items-center justify-center' onClick={props.onPlayVideo}>
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -165,7 +218,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
             </svg>
           </button>
         ) : (
-          <button className='flex items-center justify-center' onClick={props.onPauseVideo}>
+          <button className='flex items-center justify-center' onClick={pauseVideo}>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               height='24px'
@@ -225,7 +278,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
           </span>
         </div>
         <div className='flex flex-auto items-center justify-end pr-[10px]'>
-          <button onClick={props.onToggleFullscreen}>
+          <button onClick={onToggleFullscreen}>
             {props.isFullscreen ? (
               <svg
                 xmlns='http://www.w3.org/2000/svg'
