@@ -21,3 +21,7 @@ input[type=range]::-webkit-slider-runnable-track {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
 }
+
+.skip-block:hover {
+  box-shadow: 0 0 3px #fff200;
+}
