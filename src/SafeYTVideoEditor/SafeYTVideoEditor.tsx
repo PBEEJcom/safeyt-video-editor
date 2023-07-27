@@ -1,8 +1,11 @@
-import { Dialog, Input, Button, DialogTitle, DialogActions } from '@mui/material';
+import { Dialog, Input, Button, DialogTitle, DialogActions, IconButton, Stack } from '@mui/material';
+import PauseIcon from '@mui/icons-material/Pause';
+import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Fragment, RefObject, useCallback, useRef, useState } from 'react';
 import VideoPlayer from '../VideoPlayer/VideoPlayer';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { parseFormattedTime } from '../Utils/Time';
+import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 
@@ -111,6 +114,20 @@ const SafeYT = (props: SafeYTDialogProps) => {
     setSkips(newSkips);
   }, [skips]);
 
+  const addDefaultSkip = useCallback(() => {
+    const startTimeSeconds = (player?.getCurrentTime() || 0) + 1;
+    const endTimeSeconds = startTimeSeconds + 15;
+
+    const newSkip = {
+      start: getFormattedTime(startTimeSeconds),
+      end: getFormattedTime(endTimeSeconds)
+    }
+
+    const newSkips = skips.concat(newSkip);
+    setSkips(newSkips)
+
+  }, [player, skips])
+
   const handleSave = (event: {}, reason: string) => {
     if (reason === "backdropClick" || reason === "escapeKeyDown") {
       return;
@@ -123,14 +140,18 @@ const SafeYT = (props: SafeYTDialogProps) => {
     player?.playVideo();
   }, [player]);
 
+  const pauseVideo = useCallback(() => {
+    player?.pauseVideo();
+  }, [player]);
+
   const handleCancel = () => {
     setSkips([]);
     setVideoBounds(undefined);
     props.onClose(YouTube.getSafeYtLink(props.youTubeLink, [], undefined));
   }
 
-  //const encodedVideoInformation = YouTube.getEncodedSafeYTVideoInformation(YouTube.extractVideoId(props.youTubeLink), skips, videoBounds);
   const videoId = YouTube.extractVideoId(props.youTubeLink)
+  const isPlaying = !!player && playerState === YT.PlayerState.PLAYING
 
   return (
         <div className='flex flex-auto items-center justify-center flex-col p-3'>
@@ -146,9 +167,21 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 skips={skips}
                 videoBounds={videoBounds}
                 playerState={playerState}
-                onPlayVideo={playVideo}
                 playerContainer={playerContainer} />
             </div>
+            <Stack direction="row" spacing={1}>
+                {isPlaying ?
+                <IconButton onClick={pauseVideo}>
+                  <PauseIcon />
+                </IconButton>
+                : <IconButton onClick={playVideo}>
+                  <PlayArrowIcon />
+                </IconButton>
+                }
+              <IconButton onClick={addDefaultSkip}>
+                <ContentCutIcon />
+              </IconButton>
+            </Stack>
           <div>
             <p>Video</p>
             <Input
