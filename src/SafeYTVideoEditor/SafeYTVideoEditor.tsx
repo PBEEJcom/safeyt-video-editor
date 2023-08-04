@@ -1,7 +1,10 @@
-import { Dialog, Input, Button, DialogTitle, DialogActions, IconButton, Stack } from '@mui/material';
+import { Input, Button, IconButton, Stack } from '@mui/material';
+import Slider from '@mui/material/Slider';
+import Collapse from '@mui/material/Collapse';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ContentCropIcon from '@mui/icons-material/Crop';
 import { Fragment, RefObject, useCallback, useRef, useState } from 'react';
 import VideoPlayer from '../VideoPlayer/VideoPlayer';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
@@ -16,25 +19,13 @@ export interface SafeYTDialogProps {
 }
 
 const SafeYT = (props: SafeYTDialogProps) => {
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isEditingBounds, setIsEditingBounds] = useState<boolean>(false);
   const [skips, setSkips] = useState<TimeSegment[]>([]);
-  const [videoBounds, setVideoBounds] = useState<TimeSegment>();
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
+  const [videoBounds, setVideoBounds] = useState<TimeSegment>();
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
 
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
-
-  // const { videoId, skips, videoBounds } = useMemo(() => {
-  //   try {
-  //     return JSON.parse(atob(props.encodedVideoInformation));
-  //   } catch {
-  //     return {
-  //       videoId: undefined,
-  //       skips: [],
-  //       videoBounds: undefined,
-  //     }
-  //   }
-  // }, [props.encodedVideoInformation]);
 
   const onVideoBoundsStartChange = useCallback(
     (newStart: string = '') => {
@@ -128,14 +119,6 @@ const SafeYT = (props: SafeYTDialogProps) => {
 
   }, [player, skips])
 
-  const handleSave = (event: {}, reason: string) => {
-    if (reason === "backdropClick" || reason === "escapeKeyDown") {
-      return;
-    };
-
-    props.onClose(YouTube.getSafeYtLink(props.youTubeLink, skips, videoBounds));
-  }
-
   const playVideo = useCallback(() => {
     player?.playVideo();
   }, [player]);
@@ -144,11 +127,15 @@ const SafeYT = (props: SafeYTDialogProps) => {
     player?.pauseVideo();
   }, [player]);
 
-  const handleCancel = () => {
-    setSkips([]);
-    setVideoBounds(undefined);
-    props.onClose(YouTube.getSafeYtLink(props.youTubeLink, [], undefined));
-  }
+  const toggleEditBounds = useCallback(() => {
+    setIsEditingBounds(!isEditingBounds);
+  }, [isEditingBounds])
+
+  const handleChangeVideoBounds = (event: Event, newBounds: number | number[]) => {
+    // const newBoundsArray = newBounds as number[]
+    // onVideoBoundsStartChange(getFormattedTime(newBoundsArray[0]))
+    // onVideoBoundsEndChange(getFormattedTime(newBoundsArray[1]))
+  };
 
   const videoId = YouTube.extractVideoId(props.youTubeLink)
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING
@@ -163,13 +150,27 @@ const SafeYT = (props: SafeYTDialogProps) => {
           <div className="relative w-[500px]">
             <EditorControlBar
                 player={player}
-                isFullscreen={isFullscreen}
                 skips={skips}
                 videoBounds={videoBounds}
                 playerState={playerState}
                 playerContainer={playerContainer} />
             </div>
+            <Collapse in={isEditingBounds}>
+            <div className="w-[500px]">
+              <Slider
+                
+                getAriaLabel={() => 'Temperature range'}
+                value={[0, 256]}
+                onChange={handleChangeVideoBounds}
+                valueLabelDisplay="auto"
+                // getAriaValueText={valuetext}
+              />
+            </div>
+            </Collapse>
             <Stack direction="row" spacing={1}>
+              <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "secondary" : "default"}>
+                <ContentCropIcon />
+              </IconButton>
                 {isPlaying ?
                 <IconButton onClick={pauseVideo}>
                   <PauseIcon />

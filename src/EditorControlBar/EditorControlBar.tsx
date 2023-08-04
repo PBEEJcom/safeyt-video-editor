@@ -1,16 +1,11 @@
 import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
-import PauseIcon from '@mui/icons-material/Pause';
-import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { parseFormattedTime, getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
 import './EditorControlBar.css'
 import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
-import { IconButton, Stack } from '@mui/material';
 
 export interface VideoControlsProps {
-  isFullscreen: boolean;
   player?: YT.Player;
   skips?: TimeSegment[];
   videoBounds?: TimeSegment;
@@ -19,59 +14,15 @@ export interface VideoControlsProps {
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
-  console.log("player" + props.player)
   const videoStartMs = props.videoBounds?.start ? parseFormattedTime(props.videoBounds.start) : 0;
   const videoEndMs = props.videoBounds?.end ? parseFormattedTime(props.videoBounds.end) : props.player?.getDuration() || 0;
   const duration = videoEndMs - videoStartMs;
 
   const scrubber = useRef<HTMLInputElement>(null);
-  const [isMuted, setIsMuted] = useState<boolean>(props.player?.isMuted() || false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const isMobile = useMediaQuery({ query: '(max-width: 985px)' });
 
   const isPlaying = !!props.player && props.playerState === YT.PlayerState.PLAYING
-
-  const onToggleFullscreen = useCallback(async () => {
-    if (props.playerContainer.current) {
-      // eslint-disable-next-line
-      // @ts-ignore
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        try {
-          if (document.exitFullscreen) {
-            await document.exitFullscreen();
-            // eslint-disable-next-line
-            // @ts-ignore
-          } else if (document.webkitExitFullscreen) {
-            alert('webkitExitFullscreen');
-            // eslint-disable-next-line
-            // @ts-ignore
-            document.webkitExitFullscreen();
-          }
-          // setIsFullscreen(false);
-        } catch (error) {
-          console.error(error);
-        }
-      } else {
-        try {
-          if (props.playerContainer.current.requestFullscreen) {
-            await props.playerContainer.current.requestFullscreen();
-            // setIsFullscreen(true);
-
-            // eslint-disable-next-line
-            // @ts-ignore
-          } else if (playerContainer.current.webkitRequestFullscreen) {
-
-            // eslint-disable-next-line
-            // @ts-ignore
-            playerContainer.current.webkitRequestFullscreen();
-            // setIsFullscreen(true);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
-  }, []);
 
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
@@ -130,29 +81,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [seekVideoTo, checkForEdits]
   );
 
-  const onVolumeChange = useCallback(
-    (e: any) => {
-      const target = e.currentTarget;
-      if (target) {
-        const val = target.value;
-
-        target.style.backgroundSize = `${val}% 100%`;
-        props.player?.setVolume(parseInt(val, 10));
-      }
-    },
-    [props.player]
-  );
-
-  const onMuteToggle = useCallback(() => {
-    if (props.player?.isMuted()) {
-      props.player?.unMute();
-      setIsMuted(false);
-    } else {
-      props.player?.mute();
-      setIsMuted(true);
-    }
-  }, [props.player]);
-
   useEffect(() => {
     const updateInterval = isPlaying
       ? window.setInterval(() => {
@@ -199,10 +127,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
           let leftPercent = parseFormattedTime(skip.start)/duration*100
           let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
-
-
-          console.log(`${skip.start} start; ${skip.end} end; ${duration} duration;`)
-          console.log(`${leftPercent}% left; ${widthPercent}% width;`)
 
           return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] h-[7px] absolute border-t border-b border-[#BC335B] z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
         })}

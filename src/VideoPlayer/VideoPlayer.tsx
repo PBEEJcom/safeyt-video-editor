@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { parseFormattedTime } from '../Utils/Time';
 import './VideoPlayer.css'
 import { TimeSegment } from '../Utils/YouTube';
@@ -12,13 +12,6 @@ export interface YTPlayerProps {
   playerContainer: RefObject<HTMLDivElement>;
   onPlayVideo: () => void;
 }
-
-// This component does not need to be aware of changes in skips
-// consider changing the prop interface to include only the values needed
-// in order to avoid rendering when the skips change (i.e. only render when
-// the YouTube link changes??)
-
-// But then how will the editorcontrolbar receive its skips prop AND the player prop??
 
 const YTPlayer = (props: YTPlayerProps) => {
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
@@ -38,7 +31,6 @@ const YTPlayer = (props: YTPlayerProps) => {
     // eslint-disable-next-line
     // @ts-ignore
     YT.ready(() => {
-      console.log("i got run")
       if (!props.videoId) {
         return;
       }
