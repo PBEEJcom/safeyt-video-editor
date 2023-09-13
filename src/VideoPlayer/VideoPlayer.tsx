@@ -17,15 +17,21 @@ const YTPlayer = (props: YTPlayerProps) => {
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
 
+  console.log("PLAYER render")
+
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
     props.onSetPlayer(event.target);
     setPlayer(event.target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onPlayerStateChange = useCallback((event: YT.OnStateChangeEvent) => {
     props.onSetPlayerState(event.data);
     setPlayerState(event.data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  window.setInterval(() => console.log(player?.getCurrentTime()), 1000)
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -35,14 +41,16 @@ const YTPlayer = (props: YTPlayerProps) => {
         return;
       }
 
-      new YT.Player('player', {
+      // player?.destroy();
+
+      new YT.Player(`player`, {
         height: '100%',
         width: '100%',
         videoId: props.videoId,
         host: 'https://www.youtube-nocookie.com',
         events: {
           onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange,
+          onStateChange: onPlayerStateChange
         },
         playerVars: {
           iv_load_policy: 3,

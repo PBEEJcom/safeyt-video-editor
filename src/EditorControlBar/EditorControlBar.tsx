@@ -24,30 +24,29 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const isPlaying = !!props.player && props.playerState === YT.PlayerState.PLAYING
 
+  console.log("EDITOR render")
+
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
       if (currentTime >= duration && scrubber.current) {
-        scrubber.current.style.backgroundSize = '100% 100%';
         scrubber.current.value = duration.toString();
         props.player?.seekTo(videoStartMs, true);
         props.player?.pauseVideo();
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [duration, props.player, scrubber, props.skips]
+    [duration, props.player, videoStartMs]
   );
 
   const seekVideoTo = useCallback(
     (newTime: number) => {
       if (scrubber.current) {
-        scrubber.current.style.backgroundSize = `${(newTime * 100) / duration}% 100%`;
         scrubber.current.value = newTime.toString();
         props.player?.seekTo(newTime + videoStartMs, true);
         setCurrentTime(newTime);
         checkForEndOfVideo(newTime);
       }
     },
-    [checkForEndOfVideo, duration, props.player, videoStartMs]
+    [checkForEndOfVideo, props.player, videoStartMs]
   );
 
   const checkForEdits = useCallback(
@@ -91,17 +90,16 @@ const EditorControlBar = (props: VideoControlsProps) => {
             checkForEndOfVideo(newTime);
 
             if (scrubber.current) {
-              scrubber.current.style.backgroundSize = `${(newTime * 100) / duration}% 100%`;
               scrubber.current.value = newTime.toString();
             }
           }
         }, 1000)
       : undefined;
-
+    
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile, props.playerState]);
 
   return (
     <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
@@ -114,6 +112,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
         
         <input 
           ref={scrubber}
+          style={{marginLeft: `${videoStartMs / ((props.player?.getDuration() || Infinity)) * 100}%`, marginRight: `${(((props.player?.getDuration() || Infinity)) - videoEndMs) / ((props.player?.getDuration() || Infinity)) * 100}%`}}
           type='range'
           min='0'
           max={duration}
