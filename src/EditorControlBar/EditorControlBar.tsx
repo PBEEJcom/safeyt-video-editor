@@ -4,19 +4,17 @@ import { useMediaQuery } from 'react-responsive';
 import './EditorControlBar.css'
 import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
+import { nextTick } from 'process';
 
 export interface VideoControlsProps {
   player?: YT.Player;
   skips?: TimeSegment[];
-  videoBounds?: TimeSegment;
   playerContainer: RefObject<HTMLDivElement>;
   playerState: YT.PlayerState;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
-  const videoStartMs = props.videoBounds?.start ? parseFormattedTime(props.videoBounds.start) : 0;
-  const videoEndMs = props.videoBounds?.end ? parseFormattedTime(props.videoBounds.end) : props.player?.getDuration() || 0;
-  const duration = videoEndMs - videoStartMs;
+  const duration = props.player?.getDuration() || 0;
 
   const scrubber = useRef<HTMLInputElement>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -30,23 +28,23 @@ const EditorControlBar = (props: VideoControlsProps) => {
     (currentTime: number) => {
       if (currentTime >= duration && scrubber.current) {
         scrubber.current.value = duration.toString();
-        props.player?.seekTo(videoStartMs, true);
+        props.player?.seekTo(0, true);
         props.player?.pauseVideo();
       }
     },
-    [duration, props.player, videoStartMs]
+    [duration, props.player]
   );
 
   const seekVideoTo = useCallback(
     (newTime: number) => {
       if (scrubber.current) {
         scrubber.current.value = newTime.toString();
-        props.player?.seekTo(newTime + videoStartMs, true);
+        props.player?.seekTo(newTime, true);
         setCurrentTime(newTime);
         checkForEndOfVideo(newTime);
       }
     },
-    [checkForEndOfVideo, props.player, videoStartMs]
+    [checkForEndOfVideo, props.player]
   );
 
   const checkForEdits = useCallback(
@@ -80,26 +78,27 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [seekVideoTo, checkForEdits]
   );
 
-  useEffect(() => {
-    const updateInterval = isPlaying
-      ? window.setInterval(() => {
-          const newTime = Math.ceil(props.player?.getCurrentTime() || 0) + 1 - videoStartMs;
-          setCurrentTime(newTime);
-          const editApplied = checkForEdits(newTime);
-          if (!editApplied) {
-            checkForEndOfVideo(newTime);
+  const tick = useCallback(() => {
+    const newTime = Math.ceil(props.player?.getCurrentTime() || 0) + 1;
+    const editApplied = checkForEdits(newTime);
+    setCurrentTime(newTime);
+    if (!editApplied) {
+      checkForEndOfVideo(newTime);
 
-            if (scrubber.current) {
-              scrubber.current.value = newTime.toString();
-            }
-          }
-        }, 1000)
-      : undefined;
+      if (scrubber.current) {
+        scrubber.current.value = newTime.toString();
+      }
+    }
+  }, [checkForEdits, checkForEndOfVideo, props.player])
+
+  useEffect(() => {
+    checkForEdits(currentTime);
+    const updateInterval = isPlaying? window.setInterval(tick, 1000) : undefined;
     
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile, props.playerState]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick]);
 
   return (
     <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
@@ -112,7 +111,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
         
         <input 
           ref={scrubber}
-          style={{marginLeft: `${videoStartMs / ((props.player?.getDuration() || Infinity)) * 100}%`, marginRight: `${(((props.player?.getDuration() || Infinity)) - videoEndMs) / ((props.player?.getDuration() || Infinity)) * 100}%`}}
           type='range'
           min='0'
           max={duration}

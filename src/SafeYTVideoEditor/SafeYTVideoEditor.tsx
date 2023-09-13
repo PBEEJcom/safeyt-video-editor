@@ -5,7 +5,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
-import { Fragment, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
@@ -21,15 +21,14 @@ export interface SafeYTDialogProps {
 const SafeYT = (props: SafeYTDialogProps) => {
   const [isEditingBounds, setIsEditingBounds] = useState<boolean>(false);
   const [skips, setSkips] = useState<TimeSegment[]>([]);
+  const [startingSkip, setStartingSkip] = useState<TimeSegment>({})
+  const [endingSkip, setEndingSkip] = useState<TimeSegment>({})
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
-  const [videoBounds, setVideoBounds] = useState<TimeSegment>();
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
 
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
   const videoId = YouTube.extractVideoId(props.youTubeLink);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
-  const videoStartSeconds = parseFormattedTime(videoBounds?.start || "00:00");
-  const videoEndSeconds = parseFormattedTime(videoBounds?.end || getFormattedTime(player?.getDuration() || 0));
 
   console.log("EDITOR render")
 
@@ -75,70 +74,10 @@ const SafeYT = (props: SafeYTDialogProps) => {
           fs: 0,
           origin: 'https://pbeej.com',
           mute: 0,
-          start: videoBounds?.start ? parseFormattedTime(videoBounds.start) : undefined,
-          end: videoBounds?.end ? parseFormattedTime(videoBounds.end) : undefined,
         },
       });
     });
-  }, [videoId, videoBounds, onPlayerReady, onPlayerStateChange]);
-
-  const onVideoBoundsStartChange = useCallback(
-    (newStart: string = '') => {
-      let parsedStart: number;
-      try {
-        parsedStart = parseFormattedTime(newStart);
-
-        if (parsedStart <= 0 || !Number.isFinite(parsedStart)) {
-          return;
-        }
-      } catch(err) {
-        console.error(err);
-        return;
-      }
-
-      if (videoBounds?.end) {
-        if (parsedStart < parseFormattedTime(videoBounds.end)) {
-          console.log("ABOUT TO MAKE THE NEW start: ", newStart)
-          setVideoBounds((videoBounds) => ({
-            ...videoBounds,
-            start: newStart,
-          }));
-        }
-      } else {
-        console.log("ABOUT TO MAKE THE NEW start: ", newStart)
-        setVideoBounds({ start: newStart });
-      }
-    },
-    [videoBounds]
-  );
-
-  const onVideoBoundsEndChange = useCallback(
-    (newEnd: string = '') => {
-      let parsedEnd: number;
-      try {
-        parsedEnd = parseFormattedTime(newEnd);
-
-        if (parsedEnd <= 0 || !Number.isFinite(parsedEnd)) {
-          return;
-        }
-      } catch(err) {
-        console.error(err);
-        return;
-      }
-
-      if (videoBounds?.start) {
-        if (parseFormattedTime(videoBounds.start) < parsedEnd) {
-          setVideoBounds((videoBounds) => ({
-            ...videoBounds,
-            end: newEnd,
-          }));
-        }
-      } else {
-        setVideoBounds({ end: newEnd });
-      }
-    },
-    [videoBounds]
-  );
+  }, [videoId, onPlayerReady, onPlayerStateChange]);
 
   const onSkipStartChanged = useCallback(
     (skipIndex: number, newStart?: string) => {
@@ -193,16 +132,19 @@ const SafeYT = (props: SafeYTDialogProps) => {
     }
 
     const newBoundsArray = value as number[]
+    const newStartString = getFormattedTime(newBoundsArray[0] * player?.getDuration() / 100)
+    const newEndString = getFormattedTime(newBoundsArray[1] * player?.getDuration() / 100)
+    const currentEndString = getFormattedTime(player?.getDuration());
 
-    console.log("incoming new bounds: ", newBoundsArray, player?.getDuration())
-    console.log("calculated new start: ", getFormattedTime(newBoundsArray[0] * player?.getDuration() / 100))
+    setStartingSkip({
+      start: "00:00",
+      end: newStartString
+    })
 
-        onVideoBoundsEndChange(getFormattedTime(newBoundsArray[1] * player?.getDuration() / 100))
-
-    onVideoBoundsStartChange(getFormattedTime(newBoundsArray[0] * player?.getDuration() / 100))
-    // onVideoBoundsEndChange(getFormattedTime(newBoundsArray[1] * player?.getDuration() / 100))
-
-    console.log("new video bounds: ", videoBounds?.start, videoBounds?.end)
+    setEndingSkip({
+      start: newEndString,
+      end: currentEndString
+    })
   };
 
   return (
@@ -239,8 +181,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
           <div className="relative w-[500px]">
             <EditorControlBar
                 player={player}
-                skips={skips}
-                videoBounds={videoBounds}
+                skips={[...skips, startingSkip, endingSkip]}
                 playerState={playerState}
                 playerContainer={playerContainer} />
             </div>
@@ -251,7 +192,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 defaultValue={[0, 100]}
                 min={0}
                 max={100}
-                onChangeCommitted={handleChangeVideoBounds}
+                onChange={handleChangeVideoBounds}
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value: number) => {return getFormattedTime(value * (player?.getDuration() || 0) / 100)}}
               />
@@ -275,14 +216,6 @@ const SafeYT = (props: SafeYTDialogProps) => {
             </Stack>
           <div>
             <p>Video</p>
-            <Input
-              placeholder='start time'
-              value={videoBounds?.start}
-              onChange={(e: any) => onVideoBoundsStartChange(e?.target?.value)} />
-            <Input
-              placeholder='end time'
-              value={videoBounds?.end}
-              onChange={(e: any) => onVideoBoundsEndChange(e?.target?.value)} />
 
             <p>Skips</p>
             {skips.map((skip, skipIndex) => (
