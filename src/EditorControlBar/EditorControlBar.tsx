@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
 import { parseFormattedTime, getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import './EditorControlBar.css'
 import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
-import { nextTick } from 'process';
+import './EditorControlBar.css';
 
 export interface VideoControlsProps {
   player?: YT.Player;
@@ -22,11 +21,11 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const isPlaying = !!props.player && props.playerState === YT.PlayerState.PLAYING
 
-  console.log("EDITOR render")
-
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
-      if (currentTime >= duration && scrubber.current) {
+      console.log("*CHECKING* for the end")
+      if (currentTime >= Math.floor(duration) && scrubber.current) {
+        console.log("It is the *END*")
         scrubber.current.value = duration.toString();
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
@@ -47,21 +46,38 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [checkForEndOfVideo, props.player]
   );
 
+  const getCurrentSkip = useCallback((time: number): TimeSegment | undefined => {
+    if (props.skips) {
+      return props.skips.find(skip => skip.start && skip.end && parseFormattedTime(skip.start) <= time && time < parseFormattedTime(skip.end))
+    }
+    return;
+  }, [props.skips])
+
   const checkForEdits = useCallback(
-    (currentTime: number): boolean => {
-      if (props.skips) {
-        for (const skip of props.skips) {
-          if (skip.start && skip.end && parseFormattedTime(skip.start) <= currentTime && currentTime < parseFormattedTime(skip.end)) {
-            seekVideoTo(parseFormattedTime(skip.end));
-            return true;
-          }
+    (time: number): boolean => {
+      let skip;
+      let editApplied = false;
+
+      // eslint-disable-next-line no-cond-assign
+      while (skip = getCurrentSkip(time)) {
+        if (skip.end && parseFormattedTime(skip.end) >= duration) {
+          // this skip goes to the end
+          props.player?.pauseVideo();
+          seekVideoTo(parseFormattedTime(skip.start!) - 1);
+          time = parseFormattedTime(skip.start!) - 1
+        } else {
+          seekVideoTo(parseFormattedTime(skip.end!));
+          time = parseFormattedTime(skip.end!)
         }
+        editApplied = true;
       }
 
-      return false;
+      console.log(editApplied ? `There was an *EDIT* at ${time}` : `There was *NO* edit at ${time}`, `duration: ${duration}`)
+      return editApplied;
     },
-    [props.skips, seekVideoTo]
+    [duration, getCurrentSkip, props.player, seekVideoTo]
   );
+
 
   const onScrub = useCallback(
     (e: any) => {
@@ -78,8 +94,20 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [seekVideoTo, checkForEdits]
   );
 
+  const onPlayerStateChangeEvent = useCallback(
+    (event: YT.OnStateChangeEvent) => {
+      if (event.data === YT.PlayerState.ENDED && scrubber.current) {
+        console.log("It is the *END*")
+        scrubber.current.value = duration.toString();
+        props.player?.seekTo(0, true);
+        props.player?.pauseVideo();
+      }
+    }, [duration, props.player]
+  )
+
   const tick = useCallback(() => {
-    const newTime = Math.ceil(props.player?.getCurrentTime() || 0) + 1;
+    const newTime = Math.round(props.player?.getCurrentTime() || 0) + 1;
+    console.log("TICK currentTime:", props.player?.getCurrentTime(), "newTime:", newTime)
     const editApplied = checkForEdits(newTime);
     setCurrentTime(newTime);
     if (!editApplied) {
@@ -92,13 +120,14 @@ const EditorControlBar = (props: VideoControlsProps) => {
   }, [checkForEdits, checkForEndOfVideo, props.player])
 
   useEffect(() => {
-    checkForEdits(currentTime);
+    checkForEndOfVideo(currentTime);
     const updateInterval = isPlaying? window.setInterval(tick, 1000) : undefined;
+    props.player?.addEventListener("onStateChange", onPlayerStateChangeEvent);
     
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime]);
 
   return (
     <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
@@ -119,7 +148,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
         />
         { props.skips?.map((skip, i) => {
           if (!skip.start || !skip.end){
-            return (<div></div>);
+            return (<div key={i}></div>);
           }
 
           let leftPercent = parseFormattedTime(skip.start)/duration*100

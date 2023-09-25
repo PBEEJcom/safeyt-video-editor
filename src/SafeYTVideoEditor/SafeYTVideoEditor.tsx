@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
 import { Fragment, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
+import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
@@ -30,10 +30,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
   const videoId = YouTube.extractVideoId(props.youTubeLink);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
 
-  console.log("EDITOR render")
-
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
-    console.log("setting player")
     setPlayer(event.target);
   }, []);
 
@@ -48,8 +45,6 @@ const SafeYT = (props: SafeYTDialogProps) => {
       if (!videoId) {
         return;
       }
-
-      console.log("MAKING A NEW PLAYER (not setting)")
 
       player?.destroy();
 
@@ -192,7 +187,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 defaultValue={[0, 100]}
                 min={0}
                 max={100}
-                onChange={handleChangeVideoBounds}
+                onChangeCommitted={handleChangeVideoBounds}
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value: number) => {return getFormattedTime(value * (player?.getDuration() || 0) / 100)}}
               />
