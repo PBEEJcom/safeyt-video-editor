@@ -23,9 +23,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
-      console.log("*CHECKING* for the end")
       if (currentTime >= Math.floor(duration) && scrubber.current) {
-        console.log("It is the *END*")
         scrubber.current.value = duration.toString();
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
@@ -55,6 +53,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const checkForEdits = useCallback(
     (time: number): boolean => {
+      console.log("edits:", props.skips)
       let skip;
       let editApplied = false;
 
@@ -97,17 +96,18 @@ const EditorControlBar = (props: VideoControlsProps) => {
   const onPlayerStateChangeEvent = useCallback(
     (event: YT.OnStateChangeEvent) => {
       if (event.data === YT.PlayerState.ENDED && scrubber.current) {
-        console.log("It is the *END*")
         scrubber.current.value = duration.toString();
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
+      } else if (event.data === YT.PlayerState.PLAYING) {
+        console.log("switched to playing")
+        checkForEdits(props.player?.getCurrentTime() || 0);
       }
-    }, [duration, props.player]
+    }, [checkForEdits, currentTime, duration, props.player]
   )
 
   const tick = useCallback(() => {
     const newTime = Math.round(props.player?.getCurrentTime() || 0) + 1;
-    console.log("TICK currentTime:", props.player?.getCurrentTime(), "newTime:", newTime)
     const editApplied = checkForEdits(newTime);
     setCurrentTime(newTime);
     if (!editApplied) {
@@ -121,13 +121,13 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   useEffect(() => {
     checkForEndOfVideo(currentTime);
-    const updateInterval = isPlaying? window.setInterval(tick, 1000) : undefined;
+    const updateInterval = isPlaying ? window.setInterval(tick, 1000) : undefined;
     props.player?.addEventListener("onStateChange", onPlayerStateChangeEvent);
     
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 
   return (
     <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
