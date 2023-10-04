@@ -21,3 +21,9 @@ input[type=range]::-webkit-slider-runnable-track {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
 }
+
+.MuiSlider-thumb {
+  width: 2px !important;
+  height: 20px !important;
+  border-radius: 0 !important;
+}

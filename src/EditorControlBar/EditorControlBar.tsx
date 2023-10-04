@@ -53,7 +53,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const checkForEdits = useCallback(
     (time: number): boolean => {
-      console.log("edits:", props.skips)
       let skip;
       let editApplied = false;
 
@@ -71,7 +70,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
         editApplied = true;
       }
 
-      console.log(editApplied ? `There was an *EDIT* at ${time}` : `There was *NO* edit at ${time}`, `duration: ${duration}`)
       return editApplied;
     },
     [duration, getCurrentSkip, props.player, seekVideoTo]
@@ -100,10 +98,9 @@ const EditorControlBar = (props: VideoControlsProps) => {
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
       } else if (event.data === YT.PlayerState.PLAYING) {
-        console.log("switched to playing")
         checkForEdits(props.player?.getCurrentTime() || 0);
       }
-    }, [checkForEdits, currentTime, duration, props.player]
+    }, [checkForEdits, duration, props.player]
   )
 
   const tick = useCallback(() => {
