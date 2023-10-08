@@ -1,39 +1,29 @@
-input[type="range"]:hover::-webkit-slider-thumb {
-  height: 10px;
-  width: 10px;
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
   border-radius: 50%;
-  background: #BC335B;
+  background: white;
   cursor: pointer;
   box-shadow: 0 0 2px 0 #555;
   transition: background .3s ease-in-out;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-}
-
-input[type=range]::-webkit-slider-runnable-track {
-  -webkit-appearance: none;
-  box-shadow: none;
-  border: none;
-  background: transparent;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  height: 5px;
-  width: 5px;
-  background: #BC335B;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
+  border: solid #BC335B 2px;
+  z-index: 10;
+  position: relative;
 }
 
 input[type=range]::-webkit-slider-runnable-track {
   -webkit-appearance: none;
   box-shadow: none;
   border: none;
-  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+
+.MuiSlider-thumb {
+  width: 2px !important;
+  height: 20px !important;
+  border-radius: 0 !important;
 }

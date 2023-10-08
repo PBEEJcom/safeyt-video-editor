@@ -1,72 +1,80 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
 import { parseFormattedTime, getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import './EditorControlBar.css'
 import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
+import './EditorControlBar.css';
 
 export interface VideoControlsProps {
-  isPlaying: boolean;
-  isFullscreen: boolean;
   player?: YT.Player;
   skips?: TimeSegment[];
-  videoBounds?: TimeSegment;
-  onPlayVideo(): void;
-  onPauseVideo(): void;
-  onToggleFullscreen(): void;
+  playerContainer: RefObject<HTMLDivElement>;
+  playerState: YT.PlayerState;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
-  const videoStartMs = props.videoBounds?.start ? parseFormattedTime(props.videoBounds.start) : 0;
-  const videoEndMs = props.videoBounds?.end ? parseFormattedTime(props.videoBounds.end) : props.player?.getDuration() || 0;
-  const duration = videoEndMs - videoStartMs;
+  const duration = props.player?.getDuration() || 0;
 
   const scrubber = useRef<HTMLInputElement>(null);
-  const [isMuted, setIsMuted] = useState<boolean>(props.player?.isMuted() || false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const isMobile = useMediaQuery({ query: '(max-width: 985px)' });
 
+  const isPlaying = !!props.player && props.playerState === YT.PlayerState.PLAYING
+
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
-      if (currentTime >= duration && scrubber.current) {
-        scrubber.current.style.backgroundSize = '100% 100%';
+      if (currentTime >= Math.floor(duration) && scrubber.current) {
         scrubber.current.value = duration.toString();
-        props.player?.seekTo(videoStartMs, true);
-        props.onPauseVideo();
+        props.player?.seekTo(0, true);
+        props.player?.pauseVideo();
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [duration, props.player, props.onPauseVideo, scrubber, props.skips]
+    [duration, props.player]
   );
 
   const seekVideoTo = useCallback(
     (newTime: number) => {
       if (scrubber.current) {
-        scrubber.current.style.backgroundSize = `${(newTime * 100) / duration}% 100%`;
         scrubber.current.value = newTime.toString();
-        props.player?.seekTo(newTime + videoStartMs, true);
+        props.player?.seekTo(newTime, true);
         setCurrentTime(newTime);
         checkForEndOfVideo(newTime);
       }
     },
-    [checkForEndOfVideo, duration, props.player, videoStartMs]
+    [checkForEndOfVideo, props.player]
   );
+
+  const getCurrentSkip = useCallback((time: number): TimeSegment | undefined => {
+    if (props.skips) {
+      return props.skips.find(skip => skip.start && skip.end && parseFormattedTime(skip.start) <= time && time < parseFormattedTime(skip.end))
+    }
+    return;
+  }, [props.skips])
 
   const checkForEdits = useCallback(
-    (currentTime: number): boolean => {
-      if (props.skips) {
-        for (const skip of props.skips) {
-          if (skip.start && skip.end && parseFormattedTime(skip.start) <= currentTime && currentTime < parseFormattedTime(skip.end)) {
-            seekVideoTo(parseFormattedTime(skip.end));
-            return true;
-          }
-        }
-      }
+    (time: number): boolean => {
+      let skip;
+      let editApplied = false;
 
-      return false;
+      // eslint-disable-next-line no-cond-assign
+      while (skip = getCurrentSkip(time)) {
+        console.log(`There is an edit at ${getFormattedTime(time)} lasting from ${skip.start} - ${skip.end}`)
+        if (skip.end && parseFormattedTime(skip.end) >= duration) {
+          // this skip goes to the end
+          props.player?.pauseVideo();
+          seekVideoTo(parseFormattedTime(skip.start!) - 1);
+          time = parseFormattedTime(skip.start!) - 1
+        } else {
+          seekVideoTo(parseFormattedTime(skip.end!));
+          time = parseFormattedTime(skip.end!)
+        }
+        editApplied = true;
+      }
+      return editApplied;
     },
-    [props.skips, seekVideoTo]
+    [duration, getCurrentSkip, props.player, seekVideoTo]
   );
+
 
   const onScrub = useCallback(
     (e: any) => {
@@ -83,164 +91,69 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [seekVideoTo, checkForEdits]
   );
 
-  const onVolumeChange = useCallback(
-    (e: any) => {
-      const target = e.currentTarget;
-      if (target) {
-        const val = target.value;
-
-        target.style.backgroundSize = `${val}% 100%`;
-        props.player?.setVolume(parseInt(val, 10));
+  const onPlayerStateChangeEvent = useCallback(
+    (event: YT.OnStateChangeEvent) => {
+      if (event.data === YT.PlayerState.ENDED && scrubber.current) {
+        scrubber.current.value = duration.toString();
+        props.player?.seekTo(0, true);
+        props.player?.pauseVideo();
+      } else if (event.data === YT.PlayerState.PLAYING) {
+        checkForEdits(props.player?.getCurrentTime() || 0);
       }
-    },
-    [props.player]
-  );
+    }, [checkForEdits, duration, props.player]
+  )
 
-  const onMuteToggle = useCallback(() => {
-    if (props.player?.isMuted()) {
-      props.player?.unMute();
-      setIsMuted(false);
-    } else {
-      props.player?.mute();
-      setIsMuted(true);
+  const tick = useCallback(() => {
+    const newTime = Math.round(props.player?.getCurrentTime() || 0) + 1;
+    const editApplied = checkForEdits(newTime);
+    setCurrentTime(newTime);
+    if (!editApplied) {
+      checkForEndOfVideo(newTime);
+
+      if (scrubber.current) {
+        scrubber.current.value = newTime.toString();
+      }
     }
-  }, [props.player]);
+  }, [checkForEdits, checkForEndOfVideo, props.player])
 
   useEffect(() => {
-    const updateInterval = props.isPlaying
-      ? window.setInterval(() => {
-          const newTime = Math.ceil(props.player?.getCurrentTime() || 0) + 1 - videoStartMs;
-          setCurrentTime(newTime);
-          const editApplied = checkForEdits(newTime);
-          if (!editApplied) {
-            checkForEndOfVideo(newTime);
-
-            if (scrubber.current) {
-              scrubber.current.style.backgroundSize = `${(newTime * 100) / duration}% 100%`;
-              scrubber.current.value = newTime.toString();
-            }
-          }
-        }, 1000)
-      : undefined;
-
+    checkForEndOfVideo(currentTime);
+    const updateInterval = isPlaying ? window.setInterval(tick, 1000) : undefined;
+    props.player?.addEventListener("onStateChange", onPlayerStateChangeEvent);
+    
     return () => {
       window.clearInterval(updateInterval);
     };
-  }, [props.isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, videoStartMs, isMobile]);
+  }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 
   return (
-    <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700 ${(props.isPlaying && !isMobile) ? 'opacity-0 hover:opacity-100' : ''}`}>
+    <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
+      <div className="flex flex-row justify-between w-full text-[12px]">
+        <div>{getFormattedTime(currentTime)}</div>
+        <div>{getFormattedTime(duration)}</div>
+      </div>
+      
       <div className='flex flex-[0_0_10px] items-center justify-center py-[10px]'>
+        
         <input 
           ref={scrubber}
           type='range'
           min='0'
           max={duration}
           onInput={onScrub}
-          className='appearance-none w-full h-[3px] bg-[#FFFFFF3C] rounded-[5px] bg-gradient-to-r from-[#BC335B] to-[#BC335B] bg-no-repeat bg-0'
+          className='appearance-none w-full h-[7px] bg-[#BC335B] rounded-[5px]'
         />
-      </div>
-      <div className='flex align-center flex-auto'>
-        {!props.isPlaying ? (
-          <button className='flex items-center justify-center' onClick={props.onPlayVideo}>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              height='24px'
-              width='24px'
-              viewBox='0 0 24 24'
-              fill='#FFFFFF'
-            >
-              <path d='M0 0h24v24H0z' fill='none' />
-              <path d='M8 5v14l11-7z' />
-            </svg>
-          </button>
-        ) : (
-          <button className='flex items-center justify-center' onClick={props.onPauseVideo}>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              height='24px'
-              width='24px'
-              viewBox='0 0 24 24'
-              fill='#FFFFFF'
-            >
-              <path d='M0 0h24v24H0z' fill='none' />
-              <path d='M6 19h4V5H6v14zm8-14v14h4V5h-4z' />
-            </svg>
-          </button>
-        )}
+        { props.skips?.map((skip, i) => {
+          if (!skip.start || !skip.end){
+            return (<div key={i}></div>);
+          }
 
-        <div className='flex items-center'>
-          <button className='flex align-center justify-center' onClick={onMuteToggle}>
-            {isMuted ? (
-              <svg
-                id='mute-icon'
-                xmlns='http://www.w3.org/2000/svg'
-                height='24px'
-                width='24px'
-                viewBox='0 0 24 24'
-                fill='#FFFFFF'
-              >
-                <path d='M0 0h24v24H0z' fill='none' />
-                <path d='M7 9v6h4l5 5V4l-5 5H7z' />
-              </svg>
-            ) : (
-              <svg
-                id='volume-icon'
-                xmlns='http://www.w3.org/2000/svg'
-                height='24px'
-                width='24px'
-                viewBox='0 0 24 24'
-                fill='#FFFFFF'
-              >
-                <path d='M0 0h24v24H0z' fill='none' />
-                <path d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z' />
-              </svg>
-            )}
-          </button>
-          <input
-            type='range'
-            min='0'
-            max='100'
-            value={props.player?.getVolume() || 0}
-            onInput={onVolumeChange}
-            className='appearance-none w-[200px] mr-[15px] h-[5px] bg-[#FFFFFF3C] rounded-[5px
-              bg-gradient-to-r from-[#BC335B] to-[#BC335B] bg-[70%] bg-no-repeat bg-0'
-            style={{ backgroundSize: `${props.player?.getVolume() || 0}% 100%` }}
-          />
-        </div>
+          let leftPercent = parseFormattedTime(skip.start)/duration*100
+          let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
 
-        <div className='elapsed-time-container text-white'>
-          <span>
-            {getFormattedTime(currentTime)} / {getFormattedTime(duration)}
-          </span>
-        </div>
-        <div className='flex flex-auto items-center justify-end pr-[10px]'>
-          <button onClick={props.onToggleFullscreen}>
-            {props.isFullscreen ? (
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                height='24px'
-                viewBox='0 0 24 24'
-                width='24px'
-                fill='#FFFFFF'
-              >
-                <path d='M0 0h24v24H0z' fill='none' />
-                <path d='M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z' />
-              </svg>
-            ) : (
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                height='24px'
-                viewBox='0 0 24 24'
-                width='24px'
-                fill='#FFFFFF'
-              >
-                <path d='M0 0h24v24H0z' fill='none' />
-                <path d='M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z' />
-              </svg>
-            )}
-          </button>
-        </div>
+          return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+        })}
+        
       </div>
     </div>
   );
