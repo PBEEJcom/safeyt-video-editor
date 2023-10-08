@@ -58,6 +58,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
+        console.log(`There is an edit at ${getFormattedTime(time)} lasting from ${skip.start} - ${skip.end}`)
         if (skip.end && parseFormattedTime(skip.end) >= duration) {
           // this skip goes to the end
           props.player?.pauseVideo();
@@ -69,7 +70,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
         }
         editApplied = true;
       }
-
       return editApplied;
     },
     [duration, getCurrentSkip, props.player, seekVideoTo]
@@ -151,7 +151,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
           let leftPercent = parseFormattedTime(skip.start)/duration*100
           let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
 
-          return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] h-[7px] absolute border-t border-b border-[#BC335B] z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+          return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
         })}
         
       </div>
