@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
 import { Fragment, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { getFormattedTime } from '../Utils/Time';
+import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
@@ -142,6 +142,19 @@ const SafeYT = (props: SafeYTDialogProps) => {
     })
   };
 
+  const handleChangeSkipBounds = (event: React.SyntheticEvent | Event, value: number | number[], index: number) => {
+    console.log('JC handle skip bounds change', event, value, index);
+
+    setSkips((skips) => {
+      if (Array.isArray(value)) {
+        skips[index].start = getFormattedTime(value[0]);
+        skips[index].end = getFormattedTime(value[1]);
+      }
+
+      return [...skips];
+    })
+  };
+
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {props.youTubeLink && (
@@ -179,20 +192,33 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 skips={[...skips, startingSkip, endingSkip]}
                 playerState={playerState}
                 playerContainer={playerContainer} />
-            </div>
+          </div>
             <Collapse in={isEditingBounds}>
-            <div className="w-[500px]">
-              <Slider
-                size="small"
-                defaultValue={[0, 100]}
-                min={0}
-                max={100}
-                onChangeCommitted={handleChangeVideoBounds}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(value: number) => {return getFormattedTime(value * (player?.getDuration() || 0) / 100)}}
-              />
-            </div>
+              <div className="w-[500px]">
+                <Slider
+                  size="small"
+                  defaultValue={[0, 100]}
+                  min={0}
+                  max={100}
+                  onChangeCommitted={handleChangeVideoBounds}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value: number) => {return getFormattedTime(value * (player?.getDuration() || 0) / 100)}}
+                />
+              </div>
             </Collapse>
+            {skips.map((skip, index) => (
+              <div className="w-[500px]">
+                <Slider
+                  size="small"
+                  value={[parseFormattedTime(skip.start || ''), parseFormattedTime(skip.end || '')]}
+                  min={0}
+                  max={player?.getDuration() || 0}
+                  onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
+                />
+              </div>
+            ))}
             <Stack direction="row" spacing={1}>
               <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "secondary" : "default"}>
                 <ContentCropIcon />
