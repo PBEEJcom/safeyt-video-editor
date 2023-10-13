@@ -6,3 +6,13 @@
     top: -230px;
     height: calc(100% + 460px);
   }
+
+  .MuiSlider-rail, .MuiSlider-track {
+    display: none !important
+  }
+
+  .MuiSlider-thumb {
+    width: 2px !important;
+    height: 30px !important;
+    border-radius: 0 !important;
+  }

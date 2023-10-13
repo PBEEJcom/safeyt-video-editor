@@ -1,6 +1,5 @@
-import { Input, Button, IconButton, Stack } from '@mui/material';
+import { Input, Button, IconButton, Stack, Fade } from '@mui/material';
 import Slider from '@mui/material/Slider';
-import Collapse from '@mui/material/Collapse';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -29,7 +28,6 @@ const SafeYT = (props: SafeYTDialogProps) => {
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
   const videoId = YouTube.extractVideoId(props.youTubeLink);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
-  console.log("I AM ROOT", startingSkip)
 
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
     setPlayer(event.target);
@@ -128,8 +126,14 @@ const SafeYT = (props: SafeYTDialogProps) => {
     }
 
     const newBoundsArray = value as number[]
-    const newStartString = getFormattedTime(newBoundsArray[0] * player?.getDuration() / 100)
-    const newEndString = getFormattedTime(newBoundsArray[1] * player?.getDuration() / 100)
+
+    // enforce minimum distance of 1s
+    if (newBoundsArray[1] - newBoundsArray[0] < 1) {
+      newBoundsArray[0] = newBoundsArray[1] - 1
+    }
+
+    const newStartString = getFormattedTime(newBoundsArray[0])
+    const newEndString = getFormattedTime(newBoundsArray[1])
     const currentEndString = getFormattedTime(player?.getDuration());
 
     setStartingSkip({
@@ -194,22 +198,25 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 playerState={playerState}
                 playerContainer={playerContainer} />
           </div>
-            <Collapse in={isEditingBounds}>
-              <div className="w-[500px]">
+          <Fade in={isEditingBounds}>
+              <div className="w-[500px] relative top-[-27px] h-0">
                 <Slider
+                  disableSwap
+                  color='secondary'
                   size="small"
-                  defaultValue={[0, 100]}
+                  value={[parseFormattedTime(startingSkip.end || "0"), endingSkip.start ? parseFormattedTime(endingSkip.start) : player?.getDuration() || 0]}
                   min={0}
-                  max={100}
-                  onChangeCommitted={handleChangeVideoBounds}
+                  max={player?.getDuration() || 0}
+                  onChange={handleChangeVideoBounds}
                   valueLabelDisplay="auto"
-                  valueLabelFormat={(value: number) => {return getFormattedTime(value * (player?.getDuration() || 0) / 100)}}
+                  valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
                 />
               </div>
-            </Collapse>
+            </Fade>
             {skips.map((skip, index) => (
-              <div className="w-[500px]">
+              <div className="w-[500px] relative top-[-27px] h-0">
                 <Slider
+                  disableSwap
                   size="small"
                   value={[parseFormattedTime(skip.start || ''), parseFormattedTime(skip.end || '')]}
                   min={0}
