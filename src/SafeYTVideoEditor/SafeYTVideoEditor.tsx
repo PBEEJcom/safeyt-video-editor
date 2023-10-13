@@ -29,6 +29,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
   const videoId = YouTube.extractVideoId(props.youTubeLink);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
+  console.log("I AM ROOT", startingSkip)
 
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
     setPlayer(event.target);

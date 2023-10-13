@@ -13,6 +13,7 @@ export interface VideoControlsProps {
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
+  console.log("render skips", props.skips)
   const duration = props.player?.getDuration() || 0;
 
   const scrubber = useRef<HTMLInputElement>(null);
@@ -44,12 +45,14 @@ const EditorControlBar = (props: VideoControlsProps) => {
     [checkForEndOfVideo, props.player]
   );
 
-  const getCurrentSkip = useCallback((time: number): TimeSegment | undefined => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getCurrentSkip = (time: number): TimeSegment | undefined => {
     if (props.skips) {
+      console.log("getcurrentskips", props.skips)
       return props.skips.find(skip => skip.start && skip.end && parseFormattedTime(skip.start) <= time && time < parseFormattedTime(skip.end))
     }
     return;
-  }, [props.skips])
+  }
 
   const checkForEdits = useCallback(
     (time: number): boolean => {
@@ -58,7 +61,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
-        console.log(`There is an edit at ${getFormattedTime(time)} lasting from ${skip.start} - ${skip.end}`)
         if (skip.end && parseFormattedTime(skip.end) >= duration) {
           // this skip goes to the end
           props.player?.pauseVideo();
