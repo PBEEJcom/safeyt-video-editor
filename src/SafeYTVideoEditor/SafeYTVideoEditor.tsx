@@ -4,12 +4,13 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
-import { Fragment, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
+import { IndeterminateCheckBoxSharp } from '@mui/icons-material';
 
 export interface SafeYTDialogProps {
   open: boolean;
@@ -159,6 +160,35 @@ const SafeYT = (props: SafeYTDialogProps) => {
       return [...skips];
     })
   };
+
+  // check for collisions in skips
+  useMemo(() => {
+    const allSkips = [...skips, startingSkip, endingSkip]
+    console.log()
+
+    let collidingSkip: TimeSegment | undefined;
+    
+    let newSkips = skips;
+
+    skips.forEach((skip, index) => {
+      // eslint-disable-next-line no-cond-assign
+      while (collidingSkip = allSkips.find(cs => parseFormattedTime(cs.start || "") < parseFormattedTime(skip.end || "") && parseFormattedTime(cs.end || "") > parseFormattedTime(skip.end || ""))) {
+        newSkips[index].end = collidingSkip.start;
+      }
+      
+      if (parseFormattedTime(startingSkip.end || "") > parseFormattedTime(skip.start || "")) {
+        newSkips[index].start = startingSkip.end
+      }
+
+      if (parseFormattedTime(endingSkip.start || "") < parseFormattedTime(skip.end || "")) {
+        newSkips[index].end = startingSkip.start
+      }
+    })
+
+
+
+    setSkips(newSkips)
+  }, [skips, startingSkip, endingSkip])
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>

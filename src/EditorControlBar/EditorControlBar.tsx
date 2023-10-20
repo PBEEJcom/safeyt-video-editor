@@ -55,6 +55,18 @@ const EditorControlBar = (props: VideoControlsProps) => {
     return;
   }
 
+  // const skipGoesToTheEnd = (skip: TimeSegment): boolean => {
+  //   if (!skip.end) {
+  //     return false;
+  //   }
+
+  //   if (parseFormattedTime(skip.end) === duration) {
+  //     return true;
+  //   }
+
+  //   while (overlappingSkip = props.skips?.find(oSkip => ))
+  // }
+
   const checkForEdits = useCallback(
     (time: number): boolean => {
       console.log("checking for edits")
