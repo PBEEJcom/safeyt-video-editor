@@ -11,6 +11,7 @@ export interface VideoControlsProps {
   skips?: TimeSegment[];
   playerContainer: RefObject<HTMLDivElement>;
   playerState: YT.PlayerState;
+  handleEditSkip: (iindex: number) => void
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
@@ -171,7 +172,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
           let leftPercent = parseFormattedTime(skip.start)/duration*100
           let widthPercent = (parseFormattedTime(skip.end)-parseFormattedTime(skip.start))/duration*100
 
-          return (<div key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200]"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+          return (<div onClick={() => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
         })}
         
       </div>

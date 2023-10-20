@@ -25,6 +25,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
   const [endingSkip, setEndingSkip] = useState<TimeSegment>({})
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
+  const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
 
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
   const videoId = YouTube.extractVideoId(props.youTubeLink);
@@ -119,7 +120,14 @@ const SafeYT = (props: SafeYTDialogProps) => {
 
   const toggleEditBounds = useCallback(() => {
     setIsEditingBounds(!isEditingBounds);
+    setSkipEditingIndex(undefined);
   }, [isEditingBounds])
+
+  const handleEditSkip = (index: number) => {
+    console.log("skip edit index:", index)
+    setSkipEditingIndex(index);
+    setIsEditingBounds(false);
+  }
 
   const handleChangeVideoBounds = (event: React.SyntheticEvent | Event, value: number | number[]) => {
     if (!player) {
@@ -226,7 +234,8 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 player={player}
                 skips={[...skips, startingSkip, endingSkip]}
                 playerState={playerState}
-                playerContainer={playerContainer} />
+                playerContainer={playerContainer} 
+                handleEditSkip={handleEditSkip}/>
           </div>
           <Fade in={isEditingBounds}>
               <div className="w-[500px] relative top-[-27px] h-0">
@@ -244,18 +253,20 @@ const SafeYT = (props: SafeYTDialogProps) => {
               </div>
             </Fade>
             {skips.map((skip, index) => (
-              <div className="w-[500px] relative top-[-27px] h-0">
-                <Slider
-                  disableSwap
-                  size="small"
-                  value={[parseFormattedTime(skip.start || ''), parseFormattedTime(skip.end || '')]}
-                  min={0}
-                  max={player?.getDuration() || 0}
-                  onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
-                  valueLabelDisplay="auto"
-                  valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
-                />
-              </div>
+              <Fade in={skipEditingIndex === index}>
+                <div className="w-[500px] relative top-[-27px] h-0">
+                  <Slider
+                    disableSwap
+                    size="small"
+                    value={[parseFormattedTime(skip.start || ''), parseFormattedTime(skip.end || '')]}
+                    min={0}
+                    max={player?.getDuration() || 0}
+                    onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
+                  />
+                </div>
+              </Fade>
             ))}
             <Stack direction="row" spacing={1}>
               <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "secondary" : "default"}>
@@ -273,24 +284,6 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 <ContentCutIcon />
               </IconButton>
             </Stack>
-          <div>
-            <p>Video</p>
-
-            <p>Skips</p>
-            {skips.map((skip, skipIndex) => (
-              <div key={skipIndex}>
-                <Input
-                  placeholder='start time'
-                  value={skip.start}
-                  onChange={(e: any) => onSkipStartChanged(skipIndex, e?.target?.value)} />
-                <Input
-                  placeholder='end time'
-                  value={skip.end}
-                  onChange={(e: any) => onSkipEndChanged(skipIndex, e?.target?.value)} />
-              </div>
-            ))}
-            <Button onClick={onAddSkip}>Add Skip</Button>
-          </div>
         </Fragment>
       )}
     </div>
