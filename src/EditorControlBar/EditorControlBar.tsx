@@ -15,7 +15,6 @@ export interface VideoControlsProps {
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
-  console.log("render skips", props.skips)
   const duration = props.player?.getDuration() || 0;
 
   const scrubber = useRef<HTMLInputElement>(null);
@@ -27,7 +26,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
   const checkForEndOfVideo = useCallback(
     (currentTime: number) => {
       if (currentTime >= Math.floor(duration) && scrubber.current) {
-        console.log("AE - stopping because it is the end at", currentTime, "duration is", duration)
         scrubber.current.value = duration.toString();
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
@@ -58,7 +56,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
   const checkForEdits = useCallback(
     (time: number): boolean => {
-      console.log("checking for edits")
       let skip;
       let editApplied = false;
 
@@ -92,7 +89,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
   const onPlayerStateChangeEvent = useStableCallback(
     (event: YT.OnStateChangeEvent) => {
       if (event.data === YT.PlayerState.ENDED && scrubber.current) {
-        console.log("AE - stopping because it transitioned to the end state at", currentTime)
         scrubber.current.value = duration.toString();
         props.player?.seekTo(0, true);
         props.player?.pauseVideo();
@@ -125,6 +121,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
     return () => {
       window.clearInterval(updateInterval);
+      props.player?.removeEventListener("onStateChange", onPlayerStateChangeEvent);
     };
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 

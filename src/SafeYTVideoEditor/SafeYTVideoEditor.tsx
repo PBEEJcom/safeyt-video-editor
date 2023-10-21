@@ -90,11 +90,22 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     });
   }, [videoId, onPlayerReady, onPlayerStateChange]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
+  const checkForSkipCollisionsAndUpdateSkips = (newSkips: TimeSegment[]) => {
+      newSkips.forEach((skip, index) => {
+        allSkips.forEach(cs => {
+          if (cs.start < skip.end && cs.end > skip.end) {
+            newSkips[index].end = cs.start;
+          }
+        });
+      });
+
+      setSkips(newSkips);
+  }
+
   const deleteSkipBeingEdited = () => {
-    console.log("skipEditIndex", skipEditingIndex)
     if (skipEditingIndex !== undefined) {
       let newSkips = skips;
-      console.log("skipeditindex-arrya", skips)
       newSkips.splice(skipEditingIndex, 1)
       setSkips(newSkips)
       setSkipEditingIndex(undefined)
@@ -105,7 +116,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     setSkipEditingIndex(undefined)
   }
 
-  const addDefaultSkip = useCallback(() => {
+  const addDefaultSkip = () => {
     const startTimeSeconds = (player?.getCurrentTime() || 0) + 1;
     const endTimeSeconds = startTimeSeconds + 15;
 
@@ -115,9 +126,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     }
 
     const newSkips = skips.concat(newSkip);
-    setSkips(newSkips)
+    checkForSkipCollisionsAndUpdateSkips(newSkips);
     setSkipEditingIndex(newSkips.length - 1)
-  }, [player, skips])
+  }
 
   const playVideo = useCallback(() => {
     player?.playVideo();
@@ -133,7 +144,6 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }, [isEditingBounds])
 
   const handleEditSkip = (index: number) => {
-    console.log("skip edit index:", index)
     setSkipEditingIndex(index);
     setIsEditingBounds(false);
   }
@@ -166,38 +176,13 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
   const handleChangeSkipBounds = (event: React.SyntheticEvent | Event, value: number | number[], index: number) => {
     if (Array.isArray(value)) {
-      setSkips((skips) => {
-        skips[index].start = value[0];
-        skips[index].end = value[1];
-        return [...skips];
-      })
+      const newSkips = [...skips];
+      newSkips[index].start = value[0];
+      newSkips[index].end = value[1];
+
+      checkForSkipCollisionsAndUpdateSkips(newSkips);
     }
   };
-
-  // // check for collisions in skips
-  // useEffect(() => {
-  //   console.log('JC useMemo');
-  //
-  //   let collidingSkip: TimeSegment | undefined;
-  //   let newSkips = [...skips];
-  //
-  //   skips.forEach((skip, index) => {
-  //     // eslint-disable-next-line no-cond-assign
-  //     while (collidingSkip = allSkips.find(cs => cs.start < skip.end && cs.end > skip.end)) {
-  //       newSkips[index].end = collidingSkip.start;
-  //     }
-  //
-  //     if (startingSkip && startingSkip.end > skip.start) {
-  //       newSkips[index].start = startingSkip.end
-  //     }
-  //
-  //     if (endingSkip && endingSkip.start < skip.end) {
-  //       newSkips[index].end = endingSkip.start
-  //     }
-  //   })
-  //
-  //   setSkips(newSkips)
-  // }, [skips, allSkips]);
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
