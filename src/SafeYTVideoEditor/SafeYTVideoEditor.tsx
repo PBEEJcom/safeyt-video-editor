@@ -10,7 +10,7 @@ import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
-import { IndeterminateCheckBoxSharp } from '@mui/icons-material';
+import { Close, Delete, IndeterminateCheckBoxSharp } from '@mui/icons-material';
 
 export interface SafeYTDialogProps {
   open: boolean;
@@ -97,6 +97,21 @@ const SafeYT = (props: SafeYTDialogProps) => {
     setSkips(newSkips);
   }, [skips]);
 
+  const deleteSkipBeingEdited = () => {
+    console.log("skipEditIndex", skipEditingIndex)
+    if (skipEditingIndex !== undefined) {
+      let newSkips = skips;
+      console.log("skipeditindex-arrya", skips)
+      newSkips.splice(skipEditingIndex, 1)
+      setSkips(newSkips)
+      setSkipEditingIndex(undefined)
+    }
+  }
+
+  const cancelSkipEdit = () => {
+    setSkipEditingIndex(undefined)
+  }
+
   const addDefaultSkip = useCallback(() => {
     const startTimeSeconds = (player?.getCurrentTime() || 0) + 1;
     const endTimeSeconds = startTimeSeconds + 15;
@@ -108,6 +123,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
 
     const newSkips = skips.concat(newSkip);
     setSkips(newSkips)
+    setSkipEditingIndex(newSkips.length - 1)
   }, [player, skips])
 
   const playVideo = useCallback(() => {
@@ -268,22 +284,31 @@ const SafeYT = (props: SafeYTDialogProps) => {
                 </div>
               </Fade>
             ))}
-            <Stack direction="row" spacing={1}>
-              <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "secondary" : "default"}>
-                <ContentCropIcon />
+          <Stack direction="row" spacing={1}>
+            {skipEditingIndex === undefined ?
+              <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
+                { isEditingBounds ? <Close /> : <ContentCropIcon /> }
               </IconButton>
-                {isPlaying ?
-                <IconButton onClick={pauseVideo}>
-                  <PauseIcon />
-                </IconButton>
-                : <IconButton onClick={playVideo}>
-                  <PlayArrowIcon />
-                </IconButton>
-                }
-              <IconButton onClick={addDefaultSkip}>
-                <ContentCutIcon />
+              : <IconButton onClick={deleteSkipBeingEdited} color="error">
+                <Delete />
               </IconButton>
-            </Stack>
+            }
+            {isPlaying ?
+              <IconButton onClick={pauseVideo}>
+                <PauseIcon />
+              </IconButton>
+              : <IconButton onClick={playVideo}>
+                <PlayArrowIcon />
+              </IconButton>
+            }
+            {skipEditingIndex === undefined ?
+            <IconButton onClick={addDefaultSkip}>
+              <ContentCutIcon />
+            </IconButton>
+            : <IconButton color="primary" onClick={cancelSkipEdit}>
+            <Close />
+          </IconButton>}
+          </Stack>
         </Fragment>
       )}
     </div>
