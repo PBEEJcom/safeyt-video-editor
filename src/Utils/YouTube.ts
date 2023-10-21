@@ -1,8 +1,8 @@
 import axios from "axios";
 
 export interface TimeSegment {
-  start?: string;
-  end?: string;
+  start: number;
+  end: number;
 }
 
 const axiosInstance = axios.create({

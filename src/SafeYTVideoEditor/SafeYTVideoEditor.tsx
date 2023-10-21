@@ -1,4 +1,4 @@
-import { Input, Button, IconButton, Stack, Fade } from '@mui/material';
+import { IconButton, Stack, Fade } from '@mui/material';
 import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
@@ -6,11 +6,11 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
 import { Fragment, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
+import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
-import { Close, Delete, IndeterminateCheckBoxSharp } from '@mui/icons-material';
+import { Close, Delete } from '@mui/icons-material';
 
 export interface SafeYTDialogProps {
   open: boolean;
@@ -18,11 +18,11 @@ export interface SafeYTDialogProps {
   onClose: (value: string) => void;
 }
 
-const SafeYT = (props: SafeYTDialogProps) => {
+const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [isEditingBounds, setIsEditingBounds] = useState<boolean>(false);
   const [skips, setSkips] = useState<TimeSegment[]>([]);
-  const [startingSkip, setStartingSkip] = useState<TimeSegment>({})
-  const [endingSkip, setEndingSkip] = useState<TimeSegment>({})
+  const [startingSkip, setStartingSkip] = useState<TimeSegment | undefined>(undefined);
+  const [endingSkip, setEndingSkip] = useState<TimeSegment | undefined>(undefined);
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
@@ -30,6 +30,21 @@ const SafeYT = (props: SafeYTDialogProps) => {
   let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
   const videoId = YouTube.extractVideoId(props.youTubeLink);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
+  const fullVideoDuration = player?.getDuration() || 0;
+
+  const allSkips = useMemo(() => {
+    const value = [...skips]
+
+    if (startingSkip) {
+      value.push(startingSkip);
+    }
+
+    if (endingSkip) {
+      value.push(endingSkip);
+    }
+
+    return value;
+  }, [skips, startingSkip, endingSkip])
 
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
     setPlayer(event.target);
@@ -73,29 +88,7 @@ const SafeYT = (props: SafeYTDialogProps) => {
         },
       });
     });
-  }, [videoId, onPlayerReady, onPlayerStateChange]);
-
-  const onSkipStartChanged = useCallback(
-    (skipIndex: number, newStart?: string) => {
-      skips[skipIndex].start = newStart;
-      setSkips([...skips]);
-    },
-    [skips]
-  );
-
-  const onSkipEndChanged = useCallback(
-    (skipIndex: number, newStart?: string) => {
-      skips[skipIndex].end = newStart;
-      setSkips([...skips]);
-    },
-    [skips]
-  );
-
-  const onAddSkip = useCallback(() => {
-    const newSkip = {};
-    const newSkips = skips.concat(newSkip);
-    setSkips(newSkips);
-  }, [skips]);
+  }, [videoId, onPlayerReady, onPlayerStateChange]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const deleteSkipBeingEdited = () => {
     console.log("skipEditIndex", skipEditingIndex)
@@ -117,8 +110,8 @@ const SafeYT = (props: SafeYTDialogProps) => {
     const endTimeSeconds = startTimeSeconds + 15;
 
     const newSkip = {
-      start: getFormattedTime(startTimeSeconds),
-      end: getFormattedTime(endTimeSeconds)
+      start: startTimeSeconds,
+      end: endTimeSeconds
     }
 
     const newSkips = skips.concat(newSkip);
@@ -157,62 +150,54 @@ const SafeYT = (props: SafeYTDialogProps) => {
       newBoundsArray[0] = newBoundsArray[1] - 1
     }
 
-    const newStartString = getFormattedTime(newBoundsArray[0])
-    const newEndString = getFormattedTime(newBoundsArray[1])
-    const currentEndString = getFormattedTime(player?.getDuration());
+    const newStart = newBoundsArray[0];
+    const newEnd = newBoundsArray[1];
 
     setStartingSkip({
-      start: "00:00",
-      end: newStartString
+      start: 0,
+      end: newStart
     })
 
     setEndingSkip({
-      start: newEndString,
-      end: currentEndString
+      start: newEnd,
+      end: fullVideoDuration
     })
   };
 
   const handleChangeSkipBounds = (event: React.SyntheticEvent | Event, value: number | number[], index: number) => {
-    console.log('JC handle skip bounds change', event, value, index);
-
-    setSkips((skips) => {
-      if (Array.isArray(value)) {
-        skips[index].start = getFormattedTime(value[0]);
-        skips[index].end = getFormattedTime(value[1]);
-      }
-
-      return [...skips];
-    })
+    if (Array.isArray(value)) {
+      setSkips((skips) => {
+        skips[index].start = value[0];
+        skips[index].end = value[1];
+        return [...skips];
+      })
+    }
   };
 
-  // check for collisions in skips
-  useMemo(() => {
-    const allSkips = [...skips, startingSkip, endingSkip]
-    console.log()
-
-    let collidingSkip: TimeSegment | undefined;
-    
-    let newSkips = skips;
-
-    skips.forEach((skip, index) => {
-      // eslint-disable-next-line no-cond-assign
-      while (collidingSkip = allSkips.find(cs => parseFormattedTime(cs.start || "") < parseFormattedTime(skip.end || "") && parseFormattedTime(cs.end || "") > parseFormattedTime(skip.end || ""))) {
-        newSkips[index].end = collidingSkip.start;
-      }
-      
-      if (parseFormattedTime(startingSkip.end || "") > parseFormattedTime(skip.start || "")) {
-        newSkips[index].start = startingSkip.end
-      }
-
-      if (parseFormattedTime(endingSkip.start || "") < parseFormattedTime(skip.end || "")) {
-        newSkips[index].end = startingSkip.start
-      }
-    })
-
-
-
-    setSkips(newSkips)
-  }, [skips, startingSkip, endingSkip])
+  // // check for collisions in skips
+  // useEffect(() => {
+  //   console.log('JC useMemo');
+  //
+  //   let collidingSkip: TimeSegment | undefined;
+  //   let newSkips = [...skips];
+  //
+  //   skips.forEach((skip, index) => {
+  //     // eslint-disable-next-line no-cond-assign
+  //     while (collidingSkip = allSkips.find(cs => cs.start < skip.end && cs.end > skip.end)) {
+  //       newSkips[index].end = collidingSkip.start;
+  //     }
+  //
+  //     if (startingSkip && startingSkip.end > skip.start) {
+  //       newSkips[index].start = startingSkip.end
+  //     }
+  //
+  //     if (endingSkip && endingSkip.start < skip.end) {
+  //       newSkips[index].end = endingSkip.start
+  //     }
+  //   })
+  //
+  //   setSkips(newSkips)
+  // }, [skips, allSkips]);
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
@@ -248,9 +233,9 @@ const SafeYT = (props: SafeYTDialogProps) => {
           <div className="relative w-[500px]">
             <EditorControlBar
                 player={player}
-                skips={[...skips, startingSkip, endingSkip]}
+                skips={allSkips}
                 playerState={playerState}
-                playerContainer={playerContainer} 
+                playerContainer={playerContainer}
                 handleEditSkip={handleEditSkip}/>
           </div>
           <Fade in={isEditingBounds}>
@@ -259,9 +244,9 @@ const SafeYT = (props: SafeYTDialogProps) => {
                   disableSwap
                   color='secondary'
                   size="small"
-                  value={[parseFormattedTime(startingSkip.end || "0"), endingSkip.start ? parseFormattedTime(endingSkip.start) : player?.getDuration() || 0]}
+                  value={[startingSkip ? startingSkip.end : 0, endingSkip ? endingSkip.start : fullVideoDuration]}
                   min={0}
-                  max={player?.getDuration() || 0}
+                  max={fullVideoDuration}
                   onChange={handleChangeVideoBounds}
                   valueLabelDisplay="auto"
                   valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
@@ -274,9 +259,9 @@ const SafeYT = (props: SafeYTDialogProps) => {
                   <Slider
                     disableSwap
                     size="small"
-                    value={[parseFormattedTime(skip.start || ''), parseFormattedTime(skip.end || '')]}
+                    value={[skip.start, skip.end]}
                     min={0}
-                    max={player?.getDuration() || 0}
+                    max={fullVideoDuration}
                     onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
                     valueLabelDisplay="auto"
                     valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
@@ -315,4 +300,4 @@ const SafeYT = (props: SafeYTDialogProps) => {
   );
 };
 
-export default SafeYT;
+export default SafeYTVideoEditor;
