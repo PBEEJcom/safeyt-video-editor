@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
 import { TimeSegment } from '../Utils/YouTube';
@@ -8,10 +8,9 @@ import useStableCallback from '../Hooks/useStableCallback';
 
 export interface VideoControlsProps {
   player?: YT.Player;
-  skips?: TimeSegment[];
-  playerContainer: RefObject<HTMLDivElement>;
+  skips: TimeSegment[];
   playerState: YT.PlayerState;
-  handleEditSkip: (iindex: number) => void
+  handleEditSkip: (index: number) => void;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
@@ -61,8 +60,16 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
-        seekVideoTo(skip.end);
-        time = skip.end;
+        // if (skip.end >= duration) {
+        //   // this skip goes to the end
+        //   props.player?.pauseVideo();
+        //   seekVideoTo(skip.start - 1);
+        //   time = skip.start - 1
+        // } else {
+          seekVideoTo(skip.end);
+          time = skip.end;
+        // }
+
         editApplied = true;
       }
       return editApplied;
@@ -121,7 +128,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
     return () => {
       window.clearInterval(updateInterval);
-      props.player?.removeEventListener("onStateChange", onPlayerStateChangeEvent);
     };
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 

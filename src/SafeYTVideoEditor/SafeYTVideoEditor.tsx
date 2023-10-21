@@ -220,7 +220,6 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                 player={player}
                 skips={allSkips}
                 playerState={playerState}
-                playerContainer={playerContainer}
                 handleEditSkip={handleEditSkip}/>
           </div>
           <Fade in={isEditingBounds}>
