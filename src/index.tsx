@@ -1,14 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './tailwind.css';
-import SafeYTVideoEditor from './SafeYTVideoEditor/SafeYTVideoEditor';
-
+import App from './App';
 
 ReactDOM.render(
     <React.StrictMode>
-      <SafeYTVideoEditor open={true} youTubeLink={'https://youtu.be/4EZfXqcUg6E'} onClose={function (value: string): void {
-            throw new Error('Function not implemented.');
-        } } />
+      <App />
     </React.StrictMode>,
     document.getElementById('root')
   );

@@ -32,6 +32,10 @@ export default class YouTube {
     )
   }
 
+  static decodeSafeYTLink(safeYtLink: string): { videoId: string, skips: { start: string, end: string }[], videoBounds?: { start?: string, end?: string } } {
+    return JSON.parse(atob(this.extractSafeYtEncodedInformation(safeYtLink)));
+  }
+
   static getSafeYtLink(youTubeLink: string, skips: TimeSegment[], videoBounds: TimeSegment | undefined) {
     const youTubeVideoId = this.extractVideoId(youTubeLink);
     const encodedVideoInformation = this.getEncodedSafeYTVideoInformation(youTubeVideoId, skips, videoBounds);
@@ -44,6 +48,10 @@ export default class YouTube {
 
   static isValidYouTubeLink(youTubeLink: string) {
     return !!youTubeLink.match(this.youTubeLinkRegex);
+  }
+
+  static isValidSafeYTLink(link: string) {
+    return link.startsWith(this.safeYTBaseUrl);
   }
 
   static getVideoData(youTubeLink: string) {

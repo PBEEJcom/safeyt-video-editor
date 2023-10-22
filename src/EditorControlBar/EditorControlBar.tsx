@@ -14,7 +14,7 @@ export interface VideoControlsProps {
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
-  const duration = props.player?.getDuration() || 0;
+  const duration = Math.floor(props.player?.getDuration() || 0);
 
   const scrubber = useRef<HTMLInputElement>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);

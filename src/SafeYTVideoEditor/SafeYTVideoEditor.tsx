@@ -4,7 +4,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
-import { Fragment, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
@@ -14,7 +14,7 @@ import { Close, Delete } from '@mui/icons-material';
 
 export interface SafeYTDialogProps {
   open: boolean;
-  youTubeLink: string;
+  link: string;
   onClose: (value: string) => void;
 }
 
@@ -26,11 +26,11 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [player, setPlayer] = useState<YT.Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
+  const [videoId, setVideoId] = useState<string>("");
 
-  let playerContainer: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
-  const videoId = YouTube.extractVideoId(props.youTubeLink);
+  // const videoId = YouTube.extractVideoId(props.link);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
-  const fullVideoDuration = player?.getDuration() || 0;
+  const fullVideoDuration = Math.floor(player?.getDuration() || 0);
 
   const allSkips = useMemo(() => {
     const value = [...skips]
@@ -53,6 +53,31 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const onPlayerStateChange = useCallback((event: YT.OnStateChangeEvent) => {
     setPlayerState(event.data);
   }, []);
+
+  useEffect(() => {
+    if (YouTube.isValidYouTubeLink(props.link)) {
+      setVideoId(YouTube.extractVideoId(props.link) || "");
+      setStartingSkip(undefined);
+      setEndingSkip(undefined);
+      setSkips([]);
+      setIsEditingBounds(false);
+      setSkipEditingIndex(undefined);
+      setPlayerState(-1);
+    } else if (YouTube.isValidSafeYTLink(props.link)) {
+      const safeYTData = YouTube.decodeSafeYTLink(props.link);
+      setVideoId(safeYTData.videoId);
+      if (safeYTData.videoBounds?.start) {
+        setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start) });
+      }
+      if (safeYTData.videoBounds?.end) {
+        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: Infinity });
+      }
+      setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
+      setIsEditingBounds(false);
+      setSkipEditingIndex(undefined);
+      setPlayerState(-1);
+    }
+  }, [props.link]);
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -186,10 +211,10 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
-      {props.youTubeLink && (
+      {videoId && (
         <Fragment>
           <div className='w-[500px] h-[300px]'>
-              <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
+              <div className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
           <div className='h-full w-full relative overflow-hidden'>
             <div id='player' />
           </div>
