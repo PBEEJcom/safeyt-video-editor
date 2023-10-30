@@ -1,4 +1,4 @@
-import { IconButton, Stack, Fade } from '@mui/material';
+import { IconButton, Stack, Fade, Zoom, Tooltip } from '@mui/material';
 import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
@@ -10,7 +10,9 @@ import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
-import { Close, Delete } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
+import CheckIcon from '@mui/icons-material/Check';
+
 
 export interface SafeYTDialogProps {
   open: boolean;
@@ -116,21 +118,31 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }, [videoId, onPlayerReady, onPlayerStateChange]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  const checkForSkipCollisionsAndUpdateSkips = (newSkips: TimeSegment[]) => {
+  const checkForSkipCollisionsAndUpdateSkips = (newSkips: TimeSegment[], newStartingSkip: TimeSegment | undefined, newEndingSkip: TimeSegment | undefined) => {
       newSkips.forEach((skip, index) => {
-        allSkips.forEach(cs => {
+        newSkips.forEach(cs => {
           if (cs.start < skip.end && cs.end > skip.end) {
             newSkips[index].end = cs.start;
           }
         });
+
+        if (newStartingSkip && newStartingSkip.end > skip.start && newStartingSkip.end < skip.end) {
+          newSkips[index].start = newStartingSkip.end
+        }
+
+        if (newEndingSkip && newEndingSkip.start < skip.end && newEndingSkip.start > skip.start) {
+          newSkips[index].end = newEndingSkip.start
+        }
       });
 
       setSkips(newSkips);
+      setStartingSkip(newStartingSkip);
+      setEndingSkip(newEndingSkip)
   }
 
   const deleteSkipBeingEdited = () => {
     if (skipEditingIndex !== undefined) {
-      let newSkips = skips;
+      let newSkips = [...skips];
       newSkips.splice(skipEditingIndex, 1)
       setSkips(newSkips)
       setSkipEditingIndex(undefined)
@@ -139,6 +151,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
   const cancelSkipEdit = () => {
     setSkipEditingIndex(undefined)
+    setIsEditingBounds(false)
   }
 
   const addDefaultSkip = () => {
@@ -151,8 +164,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     }
 
     const newSkips = skips.concat(newSkip);
-    checkForSkipCollisionsAndUpdateSkips(newSkips);
-    setSkipEditingIndex(newSkips.length - 1)
+    checkForSkipCollisionsAndUpdateSkips(newSkips, startingSkip, endingSkip);
+    handleEditSkip(newSkips.length - 1)
   }
 
   const playVideo = useCallback(() => {
@@ -188,15 +201,17 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     const newStart = newBoundsArray[0];
     const newEnd = newBoundsArray[1];
 
-    setStartingSkip({
+    const newStartingSkip = {
       start: 0,
       end: newStart
-    })
+    }
 
-    setEndingSkip({
+    const newEndingSkip = {
       start: newEnd,
       end: fullVideoDuration
-    })
+    }
+
+    checkForSkipCollisionsAndUpdateSkips(skips, newStartingSkip, newEndingSkip)
   };
 
   const handleChangeSkipBounds = (event: React.SyntheticEvent | Event, value: number | number[], index: number) => {
@@ -205,9 +220,15 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       newSkips[index].start = value[0];
       newSkips[index].end = value[1];
 
-      checkForSkipCollisionsAndUpdateSkips(newSkips);
+      checkForSkipCollisionsAndUpdateSkips(newSkips, startingSkip, endingSkip);
     }
   };
+
+  const deleteBounds = () => {
+    setStartingSkip(undefined)
+    setEndingSkip(undefined)
+    setIsEditingBounds(false)
+  }
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
@@ -278,30 +299,50 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                 </div>
               </Fade>
             ))}
-          <Stack direction="row" spacing={1}>
-            {skipEditingIndex === undefined ?
-              <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
-                { isEditingBounds ? <Close /> : <ContentCropIcon /> }
-              </IconButton>
-              : <IconButton onClick={deleteSkipBeingEdited} color="error">
-                <Delete />
-              </IconButton>
-            }
+          <Stack direction="row" spacing={1} className='items-start'>
+            <Stack>
+              <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
+                <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
+                  { isEditingBounds ? <CheckIcon /> : <ContentCropIcon /> }
+                </IconButton>
+              </Tooltip>
+              <Zoom in={isEditingBounds}>
+                <Tooltip title="Remove" arrow placement="left">
+                  <IconButton onClick={deleteBounds} color="error">
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              </Zoom>
+            </Stack>
             {isPlaying ?
               <IconButton onClick={pauseVideo}>
                 <PauseIcon />
               </IconButton>
               : <IconButton onClick={playVideo}>
-                <PlayArrowIcon />
-              </IconButton>
+                  <PlayArrowIcon />
+                </IconButton>
             }
-            {skipEditingIndex === undefined ?
-            <IconButton onClick={addDefaultSkip}>
-              <ContentCutIcon />
-            </IconButton>
-            : <IconButton color="primary" onClick={cancelSkipEdit}>
-            <Close />
-          </IconButton>}
+
+            <Stack>
+              {skipEditingIndex === undefined ?
+              <Tooltip title="New Skip" arrow placement="right">
+                <IconButton onClick={addDefaultSkip}>
+                  <ContentCutIcon />
+                </IconButton>
+              </Tooltip>
+              : <Tooltip title="Done" arrow placement="right">
+                <IconButton color="primary" onClick={cancelSkipEdit}>
+                  <CheckIcon />
+                </IconButton>
+              </Tooltip> }
+              <Zoom in={skipEditingIndex !== undefined}>
+                <Tooltip title="Remove" arrow placement="right">
+                  <IconButton onClick={deleteSkipBeingEdited} color="error">
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              </Zoom>
+            </Stack>
           </Stack>
         </Fragment>
       )}

@@ -5,6 +5,7 @@ import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
 import './EditorControlBar.css';
 import useStableCallback from '../Hooks/useStableCallback';
+import { Tooltip } from '@mui/material';
 
 export interface VideoControlsProps {
   player?: YT.Player;
@@ -61,7 +62,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
         // if (skip.end >= duration) {
-        //   // this skip goes to the end
         //   props.player?.pauseVideo();
         //   seekVideoTo(skip.start - 1);
         //   time = skip.start - 1
@@ -152,7 +152,11 @@ const EditorControlBar = (props: VideoControlsProps) => {
           let leftPercent = skip.start/duration*100
           let widthPercent = (skip.end-skip.start)/duration*100
 
-          return (<div onClick={() => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}></div>)
+          return (
+            <Tooltip title="Click to edit" arrow placement="top">
+              <div onClick={() => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}>
+              </div>
+            </Tooltip>)
         })}
 
       </div>
