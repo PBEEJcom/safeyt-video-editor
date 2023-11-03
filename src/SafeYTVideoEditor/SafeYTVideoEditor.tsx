@@ -10,7 +10,7 @@ import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
-import { Delete } from '@mui/icons-material';
+import { Delete, TroubleshootOutlined } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 
 
@@ -69,10 +69,10 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       const safeYTData = YouTube.decodeSafeYTLink(props.link);
       setVideoId(safeYTData.videoId);
       if (safeYTData.videoBounds?.start) {
-        setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start) });
+        setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start), isAtBounds: true });
       }
       if (safeYTData.videoBounds?.end) {
-        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: Infinity });
+        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: Infinity, isAtBounds: true });
       }
       setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
       setIsEditingBounds(false);
@@ -176,10 +176,10 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     player?.pauseVideo();
   }, [player]);
 
-  const toggleEditBounds = useCallback(() => {
+  const toggleEditBounds = () => {
     setIsEditingBounds(!isEditingBounds);
     setSkipEditingIndex(undefined);
-  }, [isEditingBounds])
+  }
 
   const handleEditSkip = (index: number) => {
     setSkipEditingIndex(index);
@@ -203,12 +203,14 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
     const newStartingSkip = {
       start: 0,
-      end: newStart
+      end: newStart,
+      isAtBounds: true
     }
 
     const newEndingSkip = {
       start: newEnd,
-      end: fullVideoDuration
+      end: fullVideoDuration,
+      isAtBounds: true
     }
 
     checkForSkipCollisionsAndUpdateSkips(skips, newStartingSkip, newEndingSkip)
@@ -266,7 +268,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                 player={player}
                 skips={allSkips}
                 playerState={playerState}
-                handleEditSkip={handleEditSkip}/>
+                handleEditSkip={handleEditSkip}
+                handleEditBounds={toggleEditBounds}/>
           </div>
           <Fade in={isEditingBounds}>
               <div className="w-[500px] relative top-[-27px] h-0">

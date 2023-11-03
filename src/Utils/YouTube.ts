@@ -3,6 +3,7 @@ import axios from "axios";
 export interface TimeSegment {
   start: number;
   end: number;
+  isAtBounds?: boolean;
 }
 
 const axiosInstance = axios.create({
