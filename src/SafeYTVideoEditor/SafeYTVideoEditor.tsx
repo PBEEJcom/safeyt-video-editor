@@ -70,16 +70,20 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       setVideoId(safeYTData.videoId);
       if (safeYTData.videoBounds?.start) {
         setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start), isAtBounds: true });
+      } else {
+        setStartingSkip(undefined)
       }
       if (safeYTData.videoBounds?.end) {
-        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: Infinity, isAtBounds: true });
+        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: fullVideoDuration, isAtBounds: true });
+      } else {
+        setEndingSkip(undefined)
       }
       setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
       setIsEditingBounds(false);
       setSkipEditingIndex(undefined);
       setPlayerState(-1);
     }
-  }, [props.link]);
+  }, [fullVideoDuration, props.link]);
 
   useEffect(() => {
     // eslint-disable-next-line
