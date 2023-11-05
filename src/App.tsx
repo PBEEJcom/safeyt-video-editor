@@ -17,9 +17,7 @@ function App() {
         value={link}
         onChange={handleLinkChange}
       />
-      <SafeYTVideoEditor open={true} link={link} onClose={function (value: string): void {
-            throw new Error('Function not implemented.');
-        } } />
+      <SafeYTVideoEditor open={true} link={link} onSafeYTLinkChange={(link: string) => console.log(link)} />
 
       <h3><b>Debug Links</b></h3>
       <ul>

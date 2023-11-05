@@ -10,14 +10,13 @@ import { getFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import './SafeYTVideoEditor.css';
-import { Delete, TroubleshootOutlined } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-
 
 export interface SafeYTDialogProps {
   open: boolean;
   link: string;
-  onClose: (value: string) => void;
+  onSafeYTLinkChange: (safeYTLink: string) => void;
 }
 
 const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
@@ -235,6 +234,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     setEndingSkip(undefined)
     setIsEditingBounds(false)
   }
+
+  props.onSafeYTLinkChange(YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration}))
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
