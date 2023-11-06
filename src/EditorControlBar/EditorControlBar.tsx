@@ -12,7 +12,6 @@ export interface VideoControlsProps {
   skips: TimeSegment[];
   playerState: YT.PlayerState;
   handleEditSkip: (index: number) => void;
-  handleEditBounds: () => void;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
@@ -62,20 +61,20 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
-        if (skip.end >= duration) {
-          props.player?.pauseVideo();
-          seekVideoTo(skip.start - 1);
-          time = skip.end
-        } else {
+        // if (skip.end >= duration) {
+        //   props.player?.pauseVideo();
+        //   seekVideoTo(skip.start - 1);
+        //   time = skip.start - 1
+        // } else {
           seekVideoTo(skip.end);
           time = skip.end;
-        }
+        // }
 
         editApplied = true;
       }
       return editApplied;
     },
-    [duration, getCurrentSkip, props.player, seekVideoTo]
+    [getCurrentSkip, seekVideoTo]
   );
 
 
@@ -133,7 +132,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 
   return (
-    <div className={`flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
+    <div className={`edit-scrubber-container flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
       <div className="flex flex-row justify-between w-full text-[12px]">
         <div>{getFormattedTime(currentTime)}</div>
         <div>{getFormattedTime(duration)}</div>
@@ -155,7 +154,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
           return (
             <Tooltip title="Click to edit" arrow placement="top">
-              <div onClick={skip.isAtBounds ? () => props.handleEditBounds()  : () => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}>
+              <div onClick={() => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}>
               </div>
             </Tooltip>)
         })}

@@ -6,9 +6,10 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { getFormattedTime } from '../Utils/Time';
+import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
+import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
 import './SafeYTVideoEditor.css';
 import { Delete, TroubleshootOutlined } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
@@ -30,9 +31,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
   const [videoId, setVideoId] = useState<string>("");
 
-  // const videoId = YouTube.extractVideoId(props.link);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
   const fullVideoDuration = Math.floor(player?.getDuration() || 0);
+  const editedVideoDuration = (endingSkip?.start || fullVideoDuration) - (startingSkip?.end || 0);
 
   const allSkips = useMemo(() => {
     const value = [...skips]
@@ -69,21 +70,23 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       const safeYTData = YouTube.decodeSafeYTLink(props.link);
       setVideoId(safeYTData.videoId);
       if (safeYTData.videoBounds?.start) {
-        setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start), isAtBounds: true });
+        setStartingSkip({ start: 0, end: parseFormattedTime(safeYTData.videoBounds.start), isAtBounds: true });
       } else {
         setStartingSkip(undefined)
       }
       if (safeYTData.videoBounds?.end) {
-        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: fullVideoDuration, isAtBounds: true });
+        setEndingSkip({ start: parseFormattedTime(safeYTData.videoBounds.end), end: 522, isAtBounds: true });
       } else {
         setEndingSkip(undefined)
       }
-      setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
+      // TODO: offset only if in playback mode
+      const stOffset = parseFormattedTime(safeYTData.videoBounds?.start || '0');
+      setSkips(safeYTData.skips.map(skip => ({ start: parseFormattedTime(skip.start) - stOffset, end: parseFormattedTime(skip.end) - stOffset })));
       setIsEditingBounds(false);
       setSkipEditingIndex(undefined);
       setPlayerState(-1);
     }
-  }, [fullVideoDuration, props.link]);
+  }, [props.link]);
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -116,6 +119,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           fs: 0,
           origin: 'https://pbeej.com',
           mute: 0,
+          start: startingSkip ? startingSkip.end : undefined,
+          end: endingSkip ? endingSkip.start : undefined,
         },
       });
     });
@@ -180,6 +185,12 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     player?.pauseVideo();
   }, [player]);
 
+  const handleOverlayClick = () => {
+    if (isPlaying) {
+      player?.pauseVideo();
+    }
+  }
+
   const toggleEditBounds = () => {
     setIsEditingBounds(!isEditingBounds);
     setSkipEditingIndex(undefined);
@@ -240,40 +251,48 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {videoId && (
         <Fragment>
-          <div className='w-[500px] h-[300px]'>
-              <div className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
-          <div className='h-full w-full relative overflow-hidden'>
-            <div id='player' />
-          </div>
+          <div className='w-[90vw] h-[700px]'>
+            <div className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
+              <div className='h-full w-full relative overflow-hidden'>
+                <div id='player' />
+              </div>
 
-          <div className='absolute top-0 h-full w-full flex flex-col'>
-            <div className='flex items-center justify-center flex-auto'>
-              {!isPlaying && (
-                <button className='w-[70px] h-[48px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
-                  <svg
-                    className='mr-[2px]'
-                    xmlns='http://www.w3.org/2000/svg'
-                    height='35px'
-                    viewBox='0 0 24 24'
-                    width='35px'
-                    fill='#FFFFFF'
-                  >
-                    <path d='M0 0h24v24H0z' fill='none' />
-                    <path d='M8 5v14l11-7z' />
-                  </svg>
-                </button>
-              )}
+              <div className={`absolute top-0 h-full w-full flex flex-col video-control-overly ${isPlaying ? 'is-playing' : 'is-paused'}`}>
+                <div className='flex items-center justify-center flex-auto' onClick={handleOverlayClick}>
+                  {!isPlaying && (
+                    <button className='w-[70px] h-[48px] mt-[51px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
+                      <svg
+                        className='mr-[2px]'
+                        xmlns='http://www.w3.org/2000/svg'
+                        height='35px'
+                        viewBox='0 0 24 24'
+                        width='35px'
+                        fill='#FFFFFF'
+                      >
+                        <path d='M0 0h24v24H0z' fill='none' />
+                        <path d='M8 5v14l11-7z' />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <PlaybackScrubber
+                    duration={editedVideoDuration}
+                    startingOffset={startingSkip?.end || 0}
+                    player={player}
+                    skips={skips}
+                    playerState={playerState}
+                />
+              </div>
             </div>
           </div>
-        </div>
-          </div>
           <div className="relative w-[500px]">
-            <EditorControlBar
+            {/*<EditorControlBar
                 player={player}
                 skips={allSkips}
                 playerState={playerState}
                 handleEditSkip={handleEditSkip}
-                handleEditBounds={toggleEditBounds}/>
+            />*/}
           </div>
           <Fade in={isEditingBounds}>
               <div className="w-[500px] relative top-[-27px] h-0">

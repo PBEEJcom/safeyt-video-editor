@@ -1,4 +1,4 @@
-input[type="range"]::-webkit-slider-thumb {
+.edit-scrubber-container input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   height: 14px;
   width: 14px;
@@ -12,12 +12,12 @@ input[type="range"]::-webkit-slider-thumb {
   position: relative;
 }
 
-input[type=range]::-webkit-slider-runnable-track {
+.edit-scrubber-container input[type=range]::-webkit-slider-runnable-track {
   -webkit-appearance: none;
   box-shadow: none;
   border: none;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+.edit-scrubber-container input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
 }
