@@ -1,4 +1,4 @@
-import { IconButton, Stack, Fade, Zoom, Tooltip } from '@mui/material';
+import { IconButton, Stack, Fade, Zoom, Tooltip, Collapse, Alert } from '@mui/material';
 import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
@@ -28,6 +28,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
   const [videoId, setVideoId] = useState<string>("");
+  const [errorText, setErrorText] = useState<string>("");
 
   // const videoId = YouTube.extractVideoId(props.link);
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
@@ -56,6 +57,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }, []);
 
   useEffect(() => {
+    setErrorText("")
     if (YouTube.isValidYouTubeLink(props.link)) {
       setVideoId(YouTube.extractVideoId(props.link) || "");
       setStartingSkip(undefined);
@@ -65,22 +67,28 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       setSkipEditingIndex(undefined);
       setPlayerState(-1);
     } else if (YouTube.isValidSafeYTLink(props.link)) {
-      const safeYTData = YouTube.decodeSafeYTLink(props.link);
-      setVideoId(safeYTData.videoId);
-      if (safeYTData.videoBounds?.start) {
-        setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start), isAtBounds: true });
-      } else {
-        setStartingSkip(undefined)
+      try {
+        const safeYTData = YouTube.decodeSafeYTLink(props.link) ;
+        setVideoId(safeYTData.videoId);
+        if (safeYTData.videoBounds?.start) {
+          setStartingSkip({ start: 0, end: parseInt(safeYTData.videoBounds.start), isAtBounds: true });
+        } else {
+          setStartingSkip(undefined)
+        }
+        if (safeYTData.videoBounds?.end) {
+          setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: fullVideoDuration, isAtBounds: true });
+        } else {
+          setEndingSkip(undefined)
+        }
+        setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
+        setIsEditingBounds(false);
+        setSkipEditingIndex(undefined);
+        setPlayerState(-1);
+      } catch (error) {
+        console.error("There was an error parsing the safeYT video link", error);
+        setErrorText("Invalid SafeYT link")
       }
-      if (safeYTData.videoBounds?.end) {
-        setEndingSkip({ start: parseInt(safeYTData.videoBounds.end), end: fullVideoDuration, isAtBounds: true });
-      } else {
-        setEndingSkip(undefined)
-      }
-      setSkips(safeYTData.skips.map(skip => ({ start: parseInt(skip.start), end: parseInt(skip.end) })));
-      setIsEditingBounds(false);
-      setSkipEditingIndex(undefined);
-      setPlayerState(-1);
+
     }
   }, [fullVideoDuration, props.link]);
 
@@ -352,6 +360,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
               </Zoom>
             </Stack>
           </Stack>
+          <Collapse in={!!errorText} className='absolute'>
+            <Alert severity="error">{errorText}</Alert>
+          </Collapse>
         </Fragment>
       )}
     </div>

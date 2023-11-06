@@ -39,7 +39,13 @@ export default class YouTube {
   }
 
   static decodeSafeYTLink(safeYtLink: string): { videoId: string, skips: { start: string, end: string }[], videoBounds?: { start?: string, end?: string } } {
-    return JSON.parse(atob(this.extractSafeYtEncodedInformation(safeYtLink)));
+    let encodedInformation: string;
+    try {
+      encodedInformation = atob(this.extractSafeYtEncodedInformation(safeYtLink));
+    } catch (error) {
+      throw error;
+    }
+    return JSON.parse(encodedInformation);
   }
 
   static getSafeYtLink(youTubeVideoId: string, skips: TimeSegment[], videoBounds: TimeSegment | undefined) {
