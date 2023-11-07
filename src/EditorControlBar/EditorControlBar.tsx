@@ -61,14 +61,14 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
       // eslint-disable-next-line no-cond-assign
       while (skip = getCurrentSkip(time)) {
-        // if (skip.end >= duration) {
-        //   props.player?.pauseVideo();
-        //   seekVideoTo(skip.start - 1);
-        //   time = skip.start - 1
-        // } else {
+        if (skip.end >= duration) {
+          props.player?.pauseVideo();
+          seekVideoTo(skip.start - 1);
+          time = skip.start - 1
+        } else {
           seekVideoTo(skip.end);
           time = skip.end;
-        // }
+        }
 
         editApplied = true;
       }
@@ -150,7 +150,8 @@ const EditorControlBar = (props: VideoControlsProps) => {
         />
         { props.skips?.map((skip, i) => {
           let leftPercent = skip.start/duration*100
-          let widthPercent = (skip.end-skip.start)/duration*100
+          let end = skip.end === Infinity ? duration : skip.end;
+          let widthPercent = (end-skip.start)/duration*100
 
           return (
             <Tooltip title="Click to edit" arrow placement="top">

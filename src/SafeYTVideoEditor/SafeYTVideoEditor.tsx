@@ -1,4 +1,4 @@
-import { IconButton, Stack, Fade, Zoom, Tooltip } from '@mui/material';
+import { IconButton, Stack, Fade, Zoom, Tooltip, Collapse, Alert } from '@mui/material';
 import Slider from '@mui/material/Slider';
 import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
@@ -11,14 +11,14 @@ import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
 import './SafeYTVideoEditor.css';
-import { Delete, TroubleshootOutlined } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-
 
 export interface SafeYTDialogProps {
   open: boolean;
+  isEditMode: boolean;
   link: string;
-  onClose: (value: string) => void;
+  onSafeYTLinkChange: (safeYTLink: string) => void;
 }
 
 const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
@@ -30,6 +30,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [playerState, setPlayerState] = useState<YT.PlayerState>(-1);
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
   const [videoId, setVideoId] = useState<string>("");
+  const [errorText, setErrorText] = useState<string>("");
 
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
   const fullVideoDuration = Math.floor(player?.getDuration() || 0);
@@ -58,6 +59,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }, []);
 
   useEffect(() => {
+    setErrorText("")
     if (YouTube.isValidYouTubeLink(props.link)) {
       setVideoId(YouTube.extractVideoId(props.link) || "");
       setStartingSkip(undefined);
@@ -67,24 +69,29 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       setSkipEditingIndex(undefined);
       setPlayerState(-1);
     } else if (YouTube.isValidSafeYTLink(props.link)) {
-      const safeYTData = YouTube.decodeSafeYTLink(props.link);
-      setVideoId(safeYTData.videoId);
-      if (safeYTData.videoBounds?.start) {
-        setStartingSkip({ start: 0, end: parseFormattedTime(safeYTData.videoBounds.start), isAtBounds: true });
-      } else {
-        setStartingSkip(undefined)
+      try {
+        const safeYTData = YouTube.decodeSafeYTLink(props.link);
+        setVideoId(safeYTData.videoId);
+        if (safeYTData.videoBounds?.start) {
+          setStartingSkip({ start: 0, end: parseFormattedTime(safeYTData.videoBounds.start), isAtBounds: true });
+        } else {
+          setStartingSkip(undefined)
+        }
+        if (safeYTData.videoBounds?.end) {
+          setEndingSkip({ start: parseFormattedTime(safeYTData.videoBounds.end), end: Infinity, isAtBounds: true });
+        } else {
+          setEndingSkip(undefined)
+        }
+
+        const stOffset = props.isEditMode ? 0 : parseFormattedTime(safeYTData.videoBounds?.start || '0');
+        setSkips(safeYTData.skips.map(skip => ({ start: parseFormattedTime(skip.start) - stOffset, end: parseFormattedTime(skip.end) - stOffset })));
+        setIsEditingBounds(false);
+        setSkipEditingIndex(undefined);
+        setPlayerState(-1);
+      } catch (error) {
+        console.error("There was an error parsing the safeYT video link", error);
+        setErrorText("Invalid SafeYT link")
       }
-      if (safeYTData.videoBounds?.end) {
-        setEndingSkip({ start: parseFormattedTime(safeYTData.videoBounds.end), end: 522, isAtBounds: true });
-      } else {
-        setEndingSkip(undefined)
-      }
-      // TODO: offset only if in playback mode
-      const stOffset = parseFormattedTime(safeYTData.videoBounds?.start || '0');
-      setSkips(safeYTData.skips.map(skip => ({ start: parseFormattedTime(skip.start) - stOffset, end: parseFormattedTime(skip.end) - stOffset })));
-      setIsEditingBounds(false);
-      setSkipEditingIndex(undefined);
-      setPlayerState(-1);
     }
   }, [props.link]);
 
@@ -98,7 +105,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
       player?.destroy();
 
-      new YT.Player(`player`, {
+      new YT.Player(`player-${props.link}`, {
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -119,8 +126,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           fs: 0,
           origin: 'https://pbeej.com',
           mute: 0,
-          start: startingSkip ? startingSkip.end : undefined,
-          end: endingSkip ? endingSkip.start : undefined,
+          start: (startingSkip && !props.isEditMode) ? startingSkip.end : undefined,
+          end: (endingSkip && !props.isEditMode) ? endingSkip.start : undefined,
         },
       });
     });
@@ -224,7 +231,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
     const newEndingSkip = {
       start: newEnd,
-      end: fullVideoDuration,
+      // end: fullVideoDuration,
+      end: Infinity,
       isAtBounds: true
     }
 
@@ -247,6 +255,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     setIsEditingBounds(false)
   }
 
+  props.onSafeYTLinkChange(YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration}))
+
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {videoId && (
@@ -254,13 +264,13 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           <div className='w-[90vw] h-[700px]'>
             <div className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
               <div className='h-full w-full relative overflow-hidden'>
-                <div id='player' />
+                <div id={`player-${props.link}`} className="player" />
               </div>
 
               <div className={`absolute top-0 h-full w-full flex flex-col video-control-overly ${isPlaying ? 'is-playing' : 'is-paused'}`}>
                 <div className='flex items-center justify-center flex-auto' onClick={handleOverlayClick}>
                   {!isPlaying && (
-                    <button className='w-[70px] h-[48px] mt-[51px] rounded-[10px] bg-[#BC335B] flex items-center justify-center' onClick={playVideo}>
+                    <button className={`w-[70px] h-[48px] ${props.isEditMode ? '' : 'mt-[51px]'} rounded-[10px] bg-[#BC335B] flex items-center justify-center`} onClick={playVideo}>
                       <svg
                         className='mr-[2px]'
                         xmlns='http://www.w3.org/2000/svg'
@@ -276,100 +286,107 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                   )}
                 </div>
 
-                <PlaybackScrubber
+                {!props.isEditMode ? <PlaybackScrubber
                     duration={editedVideoDuration}
                     startingOffset={startingSkip?.end || 0}
                     player={player}
                     skips={skips}
                     playerState={playerState}
-                />
+                /> : undefined}
               </div>
             </div>
           </div>
-          <div className="relative w-[500px]">
-            {/*<EditorControlBar
-                player={player}
-                skips={allSkips}
-                playerState={playerState}
-                handleEditSkip={handleEditSkip}
-            />*/}
-          </div>
-          <Fade in={isEditingBounds}>
-              <div className="w-[500px] relative top-[-27px] h-0">
-                <Slider
-                  disableSwap
-                  color='secondary'
-                  size="small"
-                  value={[startingSkip ? startingSkip.end : 0, endingSkip ? endingSkip.start : fullVideoDuration]}
-                  min={0}
-                  max={fullVideoDuration}
-                  onChange={handleChangeVideoBounds}
-                  valueLabelDisplay="auto"
-                  valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
-                />
-              </div>
-            </Fade>
-            {skips.map((skip, index) => (
-              <Fade in={skipEditingIndex === index}>
+          {props.isEditMode ? (
+          <>
+            <div className="relative w-[500px]">
+              <EditorControlBar
+                  player={player}
+                  skips={allSkips}
+                  playerState={playerState}
+                  handleEditSkip={handleEditSkip}
+              />
+            </div>
+            <Fade in={isEditingBounds}>
                 <div className="w-[500px] relative top-[-27px] h-0">
                   <Slider
                     disableSwap
+                    color='secondary'
                     size="small"
-                    value={[skip.start, skip.end]}
+                    value={[startingSkip ? startingSkip.end : 0, endingSkip ? endingSkip.start : fullVideoDuration]}
                     min={0}
                     max={fullVideoDuration}
-                    onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
+                    onChange={handleChangeVideoBounds}
                     valueLabelDisplay="auto"
                     valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
                   />
                 </div>
               </Fade>
-            ))}
-          <Stack direction="row" spacing={1} className='items-start'>
-            <Stack>
-              <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
-                <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
-                  { isEditingBounds ? <CheckIcon /> : <ContentCropIcon /> }
-                </IconButton>
-              </Tooltip>
-              <Zoom in={isEditingBounds}>
-                <Tooltip title="Remove" arrow placement="left">
-                  <IconButton onClick={deleteBounds} color="error">
-                    <Delete />
+              {skips.map((skip, index) => (
+                <Fade in={skipEditingIndex === index}>
+                  <div className="w-[500px] relative top-[-27px] h-0">
+                    <Slider
+                      disableSwap
+                      size="small"
+                      value={[skip.start, skip.end]}
+                      min={0}
+                      max={fullVideoDuration}
+                      onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
+                      valueLabelDisplay="auto"
+                      valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
+                    />
+                  </div>
+                </Fade>
+              ))}
+            <Stack direction="row" spacing={1} className='items-start'>
+              <Stack>
+                <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
+                  <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
+                    { isEditingBounds ? <CheckIcon /> : <ContentCropIcon /> }
                   </IconButton>
                 </Tooltip>
-              </Zoom>
-            </Stack>
-            {isPlaying ?
-              <IconButton onClick={pauseVideo}>
-                <PauseIcon />
-              </IconButton>
-              : <IconButton onClick={playVideo}>
-                  <PlayArrowIcon />
+                <Zoom in={isEditingBounds}>
+                  <Tooltip title="Remove" arrow placement="left">
+                    <IconButton onClick={deleteBounds} color="error">
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                </Zoom>
+              </Stack>
+              {isPlaying ?
+                <IconButton onClick={pauseVideo}>
+                  <PauseIcon />
                 </IconButton>
-            }
+                : <IconButton onClick={playVideo}>
+                    <PlayArrowIcon />
+                  </IconButton>
+              }
 
-            <Stack>
-              {skipEditingIndex === undefined ?
-              <Tooltip title="New Skip" arrow placement="right">
-                <IconButton onClick={addDefaultSkip}>
-                  <ContentCutIcon />
-                </IconButton>
-              </Tooltip>
-              : <Tooltip title="Done" arrow placement="right">
-                <IconButton color="primary" onClick={cancelSkipEdit}>
-                  <CheckIcon />
-                </IconButton>
-              </Tooltip> }
-              <Zoom in={skipEditingIndex !== undefined}>
-                <Tooltip title="Remove" arrow placement="right">
-                  <IconButton onClick={deleteSkipBeingEdited} color="error">
-                    <Delete />
+              <Stack>
+                {skipEditingIndex === undefined ?
+                <Tooltip title="New Skip" arrow placement="right">
+                  <IconButton onClick={addDefaultSkip}>
+                    <ContentCutIcon />
                   </IconButton>
                 </Tooltip>
-              </Zoom>
+                : <Tooltip title="Done" arrow placement="right">
+                  <IconButton color="primary" onClick={cancelSkipEdit}>
+                    <CheckIcon />
+                  </IconButton>
+                </Tooltip> }
+                <Zoom in={skipEditingIndex !== undefined}>
+                  <Tooltip title="Remove" arrow placement="right">
+                    <IconButton onClick={deleteSkipBeingEdited} color="error">
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                </Zoom>
+              </Stack>
             </Stack>
-          </Stack>
+            <Collapse in={!!errorText} className='absolute'>
+              <Alert severity="error">{errorText}</Alert>
+            </Collapse>
+          </>
+        ) : undefined}
         </Fragment>
       )}
     </div>

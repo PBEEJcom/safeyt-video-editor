@@ -5,7 +5,6 @@ import { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
 import './PlaybackScrubber.css';
 import useStableCallback from '../Hooks/useStableCallback';
-import { Tooltip } from '@mui/material';
 
 export interface VideoControlsProps {
   duration: number;
