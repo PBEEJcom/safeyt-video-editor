@@ -7,11 +7,13 @@ import './PlaybackScrubber.css';
 import useStableCallback from '../Hooks/useStableCallback';
 
 export interface VideoControlsProps {
+  isFullscreen: boolean;
   duration: number;
   startingOffset: number;
   player?: YT.Player;
   skips: TimeSegment[];
   playerState: YT.PlayerState;
+  onToggleFullscreen(): void;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
@@ -94,10 +96,6 @@ const EditorControlBar = (props: VideoControlsProps) => {
     },
     [seekVideoTo, checkForEdits]
   );
-
-  const onToggleFullscreen = () => {
-    console.log('JC onToggleFullscreen');
-  }
 
   const onPlayVideo = () => {
     props.player?.playVideo();
@@ -248,8 +246,8 @@ const EditorControlBar = (props: VideoControlsProps) => {
           </span>
         </div>
         <div className='fullscreen-toggle-container'>
-          <button onClick={onToggleFullscreen}>
-            {false ? (
+          <button onClick={props.onToggleFullscreen}>
+            {props.isFullscreen ? (
               <svg
                 xmlns='http://www.w3.org/2000/svg'
                 height='24px'

@@ -4,7 +4,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';
@@ -31,6 +31,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [skipEditingIndex, setSkipEditingIndex] = useState<number | undefined>(undefined);
   const [videoId, setVideoId] = useState<string>("");
   const [errorText, setErrorText] = useState<string>("");
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const playerContainer = useRef<HTMLDivElement>(null);
 
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
   const fullVideoDuration = Math.floor(player?.getDuration() || 0);
@@ -156,6 +158,47 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       setEndingSkip(newEndingSkip)
   }
 
+  const onToggleFullscreen = async () => {
+    if (playerContainer.current) {
+      // eslint-disable-next-line
+      // @ts-ignore
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        try {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          // eslint-disable-next-line
+          // @ts-ignore
+          } else if (document.webkitExitFullscreen) {
+            // eslint-disable-next-line
+            // @ts-ignore
+            document.webkitExitFullscreen();
+          }
+          setIsFullscreen(false);
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        try {
+          if (playerContainer.current.requestFullscreen) {
+            await playerContainer.current.requestFullscreen();
+            setIsFullscreen(true);
+
+            // eslint-disable-next-line
+            // @ts-ignore
+          } else if (playerContainer.current.webkitRequestFullscreen) {
+
+            // eslint-disable-next-line
+            // @ts-ignore
+            playerContainer.current.webkitRequestFullscreen();
+            setIsFullscreen(true);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+  }
+
   const deleteSkipBeingEdited = () => {
     if (skipEditingIndex !== undefined) {
       let newSkips = [...skips];
@@ -262,7 +305,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       {videoId && (
         <Fragment>
           <div className='w-[90vw] h-[700px]'>
-            <div className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
+            <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
               <div className='h-full w-full relative overflow-hidden'>
                 <div id={`player-${props.link}`} className="player" />
               </div>
@@ -287,11 +330,13 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                 </div>
 
                 {!props.isEditMode ? <PlaybackScrubber
+                    isFullscreen={isFullscreen}
                     duration={editedVideoDuration}
                     startingOffset={startingSkip?.end || 0}
                     player={player}
                     skips={skips}
                     playerState={playerState}
+                    onToggleFullscreen={onToggleFullscreen}
                 /> : undefined}
               </div>
             </div>
