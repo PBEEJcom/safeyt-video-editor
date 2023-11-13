@@ -47,6 +47,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
         checkForEndOfVideo(newTime);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [checkForEndOfVideo, props.player]
   );
 

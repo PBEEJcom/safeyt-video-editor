@@ -74,6 +74,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
       }
       return editApplied;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [getCurrentSkip, seekVideoTo]
   );
 

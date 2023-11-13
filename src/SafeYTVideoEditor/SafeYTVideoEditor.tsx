@@ -95,6 +95,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
         setErrorText("Invalid SafeYT link")
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.link]);
 
   useEffect(() => {
