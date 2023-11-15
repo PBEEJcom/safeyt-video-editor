@@ -23,6 +23,7 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - run: yarn
       - run: yarn rollup
-      - run: yarn publish:patch
+      - run: yarn version --patch
+      - run: yarn version-and-publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
