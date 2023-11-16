@@ -13,8 +13,13 @@ const config = [{
     output: {
             dir: "dist",
             format: 'esm',
-            sourcemap: true
+            sourcemap: true,
+            globals: {
+                react: 'React',
+                'react-dom': 'ReactDOM'
+            }
     },
+    external: ['react', 'react-dom'],
     plugins: [
         external(),
         resolve({

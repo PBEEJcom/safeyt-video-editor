@@ -1,7 +1,6 @@
 import React from 'react';
 import './SafeYTVideoEditor.css';
 export interface SafeYTDialogProps {
-    open: boolean;
     isEditMode: boolean;
     link: string;
     onSafeYTLinkChange: (safeYTLink: string) => void;
