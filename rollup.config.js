@@ -17,7 +17,10 @@ const config = [{
     },
     plugins: [
         external(),
-        resolve(),
+        resolve({
+            browser: true,
+            dedupe: ['react', 'react-dom'],
+          }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
         postcss(),

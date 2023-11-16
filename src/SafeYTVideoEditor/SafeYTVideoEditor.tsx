@@ -15,7 +15,6 @@ import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 
 export interface SafeYTDialogProps {
-  open: boolean;
   isEditMode: boolean;
   link: string;
   onSafeYTLinkChange: (safeYTLink: string) => void;
