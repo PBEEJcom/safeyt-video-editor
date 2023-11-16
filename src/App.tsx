@@ -22,7 +22,7 @@ function App() {
         value={link}
         onChange={handleLinkChange}
       />
-      <SafeYTVideoEditor open={true} isEditMode={true} link={link} onSafeYTLinkChange={(link: string) => console.log(link)} />
+      <SafeYTVideoEditor isEditMode={true} link={link} onSafeYTLinkChange={(link: string) => console.log(link)} />
 
 
       <TextField
@@ -30,7 +30,7 @@ function App() {
         value={viewLink}
         onChange={handleViewLinkChange}
       />
-      <SafeYTVideoEditor open={true} isEditMode={false} link={viewLink} onSafeYTLinkChange={(link: string) => console.log(link)} />
+      <SafeYTVideoEditor isEditMode={false} link={viewLink} onSafeYTLinkChange={(link: string) => console.log(link)} />
       {/*<h3><b>Debug Links</b></h3>
       <ul>
         <li> https://youtu.be/4EZfXqcUg6E </li>
