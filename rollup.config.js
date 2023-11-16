@@ -6,7 +6,7 @@ import external from 'rollup-plugin-peer-deps-external';
 import postcss from 'rollup-plugin-postcss';
 import json from '@rollup/plugin-json';
 import dts from 'rollup-plugin-dts';
-
+import tailwindcss from 'tailwindcss';
 
 const config = [{
     input: 'src/index.tsx',
@@ -28,7 +28,17 @@ const config = [{
           }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
-        postcss(),
+        postcss({
+            config: {
+              path: './postcss.config.js',
+            },
+            extensions: ['.css'],
+            minimize: true,
+            inject: {
+              insertAt: 'top',
+            },
+            plugins: [tailwindcss("./tailwind.config.js")],
+          }),
         terser(),
         json()
     ]
