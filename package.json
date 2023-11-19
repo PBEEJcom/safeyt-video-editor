@@ -45,7 +45,7 @@
     "eject": "react-scripts eject",
     "rollup": "rollup -c --silent",
     "clean": "run() { cd src/$1 && rimraf build; }; run",
-    "version-and-publish": "run() { yarn clean $1 && yarn build $1 && version=$(cd src/$1 && yarn version --no-git-tag-version $2) && (cd src/$1 && yarn publish --registry=https://npm.pkg.github.com/) && git add src/$1 && git commit -m \"$1 - $version\" && git push; }; run",
+    "version-and-publish": "run() { yarn clean $1 && yarn build $1 && version=$(cd src/$1 && yarn version --no-git-tag-version $2) && (cd src/$1 && yarn publish --registry=https://npm.pkg.github.com/) }; run",
     "publish:patch": "run() { yarn version-and-publish $1 patch; }; run",
     "publish:minor": "run() { yarn version-and-publish $1 minor; }; run",
     "publish:major": "run() { yarn version-and-publish $1 major; }; run"
