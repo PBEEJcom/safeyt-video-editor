@@ -16,7 +16,8 @@ const config = [{
             sourcemap: true,
             globals: {
                 react: 'React',
-                'react-dom': 'ReactDOM'
+                'react-dom': 'ReactDOM',
+                'react/jsx-runtime': 'ReactJSXRuntime'
             }
     },
     external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
