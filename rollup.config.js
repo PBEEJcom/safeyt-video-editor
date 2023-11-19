@@ -19,7 +19,7 @@ const config = [{
                 'react-dom': 'ReactDOM'
             }
     },
-    external: ['react', 'react-dom'],
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
     plugins: [
         external(),
         resolve({
