@@ -22,7 +22,7 @@ const config = [{
     },
     external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
     plugins: [
-        external(),
+        // external(),
         resolve({ browser : true }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),

@@ -1,6 +1,6 @@
 {
   "name": "@pbeejcom/safeyt-video-editor",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "private": false,
   "type": "module",
   "types": "dist/index.d.ts",
@@ -35,18 +35,8 @@
     "tailwindcss": "^3.3.2",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0",
-    "youtube-player": "^5.6.0",
-    "url": "^0.11.0",
-    "util": "^0.12.3",
-    "stream-browserify": "^3.0.0",
-    "stream-http": "^3.1.0",
-    "tty-browserify": "^0.0.1",
-    "path-browserify": "^1.0.0",
-    "https-browserify": "^1.0.0",
-    "os-browserify": "^0.3.0",
-    "assert": "^2.0.0",
-    "browserify-zlib": "^0.2.0"
-  },
+    "youtube-player": "^5.6.0"
+    },
   "scripts": {
     "start": "PORT=3030 react-scripts start",
     "build": "react-scripts build",
