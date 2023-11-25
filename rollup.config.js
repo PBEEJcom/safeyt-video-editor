@@ -25,12 +25,12 @@ const config = [{
     external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
     plugins: [
         external(),
-        nodePolyfills({
-          exclude: [
-            "node_modules/prop-types/**/*.js",
-            "node_modules/react-is/**/*.js"
-          ],
-        }),
+        // nodePolyfills({
+        //   exclude: [
+        //     "node_modules/prop-types/**/*.js",
+        //     "node_modules/react-is/**/*.js"
+        //   ],
+        // }),
         resolve({ browser : true }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
