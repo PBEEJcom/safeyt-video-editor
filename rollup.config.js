@@ -7,6 +7,8 @@ import postcss from 'rollup-plugin-postcss';
 import json from '@rollup/plugin-json';
 import dts from 'rollup-plugin-dts';
 import tailwindcss from 'tailwindcss';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
+
 
 const config = [{
     input: 'src/index.tsx',
@@ -23,6 +25,7 @@ const config = [{
     external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
     plugins: [
         // external(),
+        nodePolyfills(),
         resolve({ browser : true }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
