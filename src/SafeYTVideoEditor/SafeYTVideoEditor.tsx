@@ -13,7 +13,6 @@ import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
 import './SafeYTVideoEditor.css';
 import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-import { IndexKind } from 'typescript';
 
 export interface SafeYTDialogProps {
   isEditMode: boolean;
