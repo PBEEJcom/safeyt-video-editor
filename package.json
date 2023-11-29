@@ -1,6 +1,6 @@
 {
   "name": "@pbeejcom/safeyt-video-editor",
-  "version": "0.2.20",
+  "version": "1.0.0",
   "private": false,
   "type": "module",
   "types": "dist/index.d.ts",
