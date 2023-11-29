@@ -16,13 +16,13 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app h-[500px]">
       <TextField
         placeholder="YouTube or SafeYT Link"
         value={link}
         onChange={handleLinkChange}
       />
-      <SafeYTVideoEditor isEditMode={true} link={link} onSafeYTLinkChange={(link: string) => console.log(link)} />
+      <SafeYTVideoEditor height={200} width={400} isEditMode={true} link={link} onSafeYTLinkChange={(link: string) => console.log(link)} />
 
 
       <TextField
@@ -30,7 +30,7 @@ function App() {
         value={viewLink}
         onChange={handleViewLinkChange}
       />
-      <SafeYTVideoEditor isEditMode={false} link={viewLink} onSafeYTLinkChange={(link: string) => console.log(link)} />
+      <SafeYTVideoEditor height={300} width={500} isEditMode={false} link={viewLink} onSafeYTLinkChange={(link: string) => console.log(link)} />
       {/*<h3><b>Debug Links</b></h3>
       <ul>
         <li> https://youtu.be/4EZfXqcUg6E </li>

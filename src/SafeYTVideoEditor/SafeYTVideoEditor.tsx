@@ -18,6 +18,8 @@ export interface SafeYTDialogProps {
   isEditMode: boolean;
   link: string;
   onSafeYTLinkChange: (safeYTLink: string) => void;
+  height: number;
+  width: number;
 }
 
 const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
@@ -304,7 +306,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {videoId && (
         <Fragment>
-          <div className='w-[90vw] h-[700px]'>
+          <div style={{width: props.width, height: props.height}}>
             <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
               <div className='h-full w-full relative overflow-hidden'>
                 <div id={`player-${props.link}`} className="player" />
@@ -343,7 +345,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           </div>
           {props.isEditMode ? (
           <>
-            <div className="relative w-[500px]">
+            <div className="relative" style={{width: props.width}}>
               <EditorControlBar
                   player={player}
                   skips={allSkips}
@@ -352,7 +354,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
               />
             </div>
             <Fade in={isEditingBounds}>
-                <div className="w-[500px] relative top-[-27px] h-0">
+                <div className="relative top-[-27px] h-0" style={{width: props.width}}>
                   <Slider
                     disableSwap
                     color='secondary'
@@ -368,7 +370,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
               </Fade>
               {skips.map((skip, index) => (
                 <Fade in={skipEditingIndex === index}>
-                  <div className="w-[500px] relative top-[-27px] h-0">
+                  <div className="relative top-[-27px] h-0" style={{width: props.width}}>
                     <Slider
                       disableSwap
                       size="small"
