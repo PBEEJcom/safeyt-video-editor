@@ -13,6 +13,7 @@ import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
 import './SafeYTVideoEditor.css';
 import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
+import { IndexKind } from 'typescript';
 
 export interface SafeYTDialogProps {
   isEditMode: boolean;
@@ -249,8 +250,13 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }
 
   const handleEditSkip = (index: number) => {
-    setSkipEditingIndex(index);
-    setIsEditingBounds(false);
+    if (allSkips[index]?.isAtBounds) {
+      setIsEditingBounds(true);
+
+    } else {
+      setSkipEditingIndex(index);
+      setIsEditingBounds(false);
+    }
   }
 
   const handleChangeVideoBounds = (event: React.SyntheticEvent | Event, value: number | number[]) => {
