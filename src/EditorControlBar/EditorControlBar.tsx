@@ -11,7 +11,7 @@ export interface VideoControlsProps {
   player?: YT.Player;
   skips: TimeSegment[];
   playerState: YT.PlayerState;
-  handleEditSkip: (index: number) => void;
+  handleEditSkip: (index: number, isEditingBounds: boolean) => void;
 }
 
 const EditorControlBar = (props: VideoControlsProps) => {
@@ -156,7 +156,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
 
           return (
             <Tooltip title="Click to edit" arrow placement="top">
-              <div onClick={() => props.handleEditSkip(i)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}>
+              <div onClick={() => props.handleEditSkip(i, !!skip.isAtBounds)} key={`${leftPercent}l%-${widthPercent}w%`} className={"bg-[white] opacity-90 h-[7px] absolute z-[0] hover:h-[11px] hover:border-[#fff200] hover:rounded-[2px] hover:border-[2px] skip-block hover:shadow-[0_0_3px_#fff200] cursor-pointer"} style={{left: `${leftPercent}%`, width: `${widthPercent}%`}}>
               </div>
             </Tooltip>)
         })}

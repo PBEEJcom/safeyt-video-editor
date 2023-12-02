@@ -1,4 +1,6 @@
 # SafeYT Video Editor
+A portable React component for editing YouTube videos
+
 ## Installation
 1. Create a GitHub Personal Access Token
 This component is published to a PBEEJ package repository in GitHub, so you'll need a token to access it. Log in to GitHub.com and click on your profile picture. Click Settings > Developer Settings > Personal access tokens > Tokens (classic). Create a new token, and grant it the "read:packages" scope.
@@ -12,49 +14,41 @@ always-auth=true
 3. Install
 `yarn add @pbeejcom/safeyt-video-editor@latest`
 
-# Getting Started with Create React App
+## Usage
+```
+<SafeYTVideoEditor 
+    width={700} 
+    height={400} 
+    isEditMode={true} 
+    link={link} 
+    onSafeYTLinkChange={(link: string) => setOutputLink(link)} />
+```
+`width`, `height`
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sets the dimensions of the video player (not including the play bar).
 
-## Available Scripts
+`isEditMode`
 
-In the project directory, you can run:
+Sets whether the component is in edit mode (allows creation of skips and bounds) or viewer mode. In viewer mode, no edits are visible to the user, and the bounds are enforced at the call to YouTube. This means that, unlike in edit mode, the YouTube content between the start and end bounds is all that is fetched.
+
+`link`
+
+A YouTube or SafeYT link for viewing or editing.
+
+`onSafeYTLinkChange`
+
+This hook is called by the component whenever the output SafeYT link is changed. You most likely want to pass in a setter in order to keep track of what the SafeYT link is so it can be exported by a user after editing is complete. This hook has little meaning - but is called nonetheless - when `isEditMode` is `false`.
+
+## Releases
+### 1.0.2
+- Fixed a bug where creating a new skip would open the video bounds for editing, instead of the newly created skip.
+
+## Development
 
 ### `yarn start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Open [http://localhost:3030](http://localhost:3030) to view it in the browser.
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
-
-### `yarn test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `yarn build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).

@@ -157,7 +157,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
       setSkips(newSkips);
       setStartingSkip(newStartingSkip);
-      setEndingSkip(newEndingSkip)
+      setEndingSkip(newEndingSkip);
   }
 
   const onToggleFullscreen = async () => {
@@ -226,7 +226,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
     const newSkips = skips.concat(newSkip);
     checkForSkipCollisionsAndUpdateSkips(newSkips, startingSkip, endingSkip);
-    handleEditSkip(newSkips.length - 1)
+    handleEditSkip(newSkips.length - 1, false)
   }
 
   const playVideo = useCallback(() => {
@@ -248,10 +248,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     setSkipEditingIndex(undefined);
   }
 
-  const handleEditSkip = (index: number) => {
-    if (allSkips[index]?.isAtBounds) {
+  const handleEditSkip = (index: number, isEditingBounds: boolean) => {
+    if (isEditingBounds) {
       setIsEditingBounds(true);
-
     } else {
       setSkipEditingIndex(index);
       setIsEditingBounds(false);
