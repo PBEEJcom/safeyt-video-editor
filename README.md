@@ -3,7 +3,7 @@ A portable React component for editing YouTube videos
 
 ## Installation
 1. Create a GitHub Personal Access Token
-This component is published to a PBEEJ package repository in GitHub, so you'll need a token to access it. Log in to GitHub.com and click on your profile picture. Click Settings > Developer Settings > Personal access tokens > Tokens (classic). Create a new token, and grant it the "read:packages" scope.
+This component is published to a PBEEJ package repository in GitHub, so you'll need a token to access it. Log in to GitHub.com and click on your profile picture. Click Settings > Developer Settings > Personal access tokens > Tokens (classic). Create a new (classic) token, and grant it the "read:packages" scope.
 2. Configure the project for the PBEEJ package repository
 Create a `.npmrc` file at the root of the project, and be sure to add it to the `.gitignore`, since it will contain your PAT.
 ```
