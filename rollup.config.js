@@ -18,11 +18,10 @@ const config = [{
             sourcemap: true,
             globals: {
                 react: 'React',
-                'react-dom': 'ReactDOM',
-                'react/jsx-runtime': 'ReactJSXRuntime'
+                'react-dom': 'ReactDOM'
             }
     },
-    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
+    external: ['react', 'react-dom', 'react-dom/client '],
     plugins: [
         external(),
         // nodePolyfills({
