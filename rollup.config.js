@@ -15,11 +15,22 @@ const config = [{
     output: {
             dir: "dist",
             format: 'esm',
-            sourcemap: true
+            sourcemap: true,
+            globals: {
+                react: 'React',
+                'react-dom': 'ReactDOM',
+                'react/jsx-runtime': 'ReactJSXRuntime'
+            }
     },
-    external: ['react', 'react-dom', 'react-dom/client '],
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
     plugins: [
         external(),
+        // nodePolyfills({
+        //   exclude: [
+        //     "node_modules/prop-types/**/*.js",
+        //     "node_modules/react-is/**/*.js"
+        //   ],
+        // }),
         resolve({ browser : true }),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
