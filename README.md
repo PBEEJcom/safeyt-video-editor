@@ -16,6 +16,10 @@ always-auth=true
 
 ## Usage
 ```
+import { SafeYTVideoEditor } from '@pbeejcom/safeyt-video-editor';
+
+// ...
+
 <SafeYTVideoEditor 
     width={700} 
     height={400} 
@@ -40,8 +44,10 @@ A YouTube or SafeYT link for viewing or editing.
 This hook is called by the component whenever the output SafeYT link is changed. You most likely want to pass in a setter in order to keep track of what the SafeYT link is so it can be exported by a user after editing is complete. This hook has little meaning - but is called nonetheless - when `isEditMode` is `false`.
 
 ## Releases
+### 2.0.0
+- Downgrade to React 17 for compatibility with React 17 applications.
 ### 1.1.0
-- Expose YouTube util for consuming components
+- Expose YouTube util for consuming components.
 ### 1.0.2
 - Fixed a bug where creating a new skip would open the video bounds for editing, instead of the newly created skip.
 
