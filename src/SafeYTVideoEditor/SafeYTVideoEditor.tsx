@@ -11,7 +11,7 @@ import React from 'react';
 import EditorControlBar from '../EditorControlBar/EditorControlBar';
 import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
 import './SafeYTVideoEditor.css';
-import { Delete } from '@mui/icons-material';
+import Delete from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 
 export interface SafeYTDialogProps {

@@ -22,7 +22,7 @@ const config = [{
             //     'react/jsx-runtime': 'ReactJSXRuntime'
             // }
     },
-    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client', '@emotion/react', '@emotion/styled', '@mui/material'],
+    external: ['react', 'react-dom', 'react-dom/client', '@emotion/react', '@emotion/styled', '@mui/material'],
     plugins: [
         external(),
         // nodePolyfills({
