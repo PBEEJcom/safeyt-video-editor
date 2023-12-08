@@ -309,7 +309,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
       {videoId && (
-        <Fragment>
+        <>
           <div style={{width: props.width, height: props.height}}>
             <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
               <div className='h-full w-full relative overflow-hidden'>
@@ -438,7 +438,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
             </Collapse>
           </>
         ) : undefined}
-        </Fragment>
+        </>
       )}
     </div>
   );
