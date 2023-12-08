@@ -1,4 +1,5 @@
 /// <reference types="youtube" />
+/// <reference types="react" />
 import { TimeSegment } from '../Utils/YouTube';
 import './PlaybackScrubber.css';
 export interface VideoControlsProps {

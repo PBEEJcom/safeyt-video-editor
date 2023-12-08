@@ -1,3 +1,4 @@
+/// <reference types="react" />
 import './SafeYTVideoEditor.css';
 export interface SafeYTDialogProps {
     isEditMode: boolean;

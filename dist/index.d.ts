@@ -1,3 +1,4 @@
+/// <reference types="react" />
 import * as axios from 'axios';
 
 interface SafeYTDialogProps {
