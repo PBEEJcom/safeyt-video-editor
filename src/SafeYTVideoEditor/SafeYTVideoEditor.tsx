@@ -4,7 +4,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCropIcon from '@mui/icons-material/Crop';
-import { Fragment, useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import YouTube, { TimeSegment } from '../Utils/YouTube';
 import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
 import React from 'react';

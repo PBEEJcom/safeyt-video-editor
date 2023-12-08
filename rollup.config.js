@@ -15,14 +15,14 @@ const config = [{
     output: {
             dir: "dist",
             format: 'esm',
-            sourcemap: true,
-            globals: {
-                react: 'React',
-                'react-dom': 'ReactDOM',
-                'react/jsx-runtime': 'ReactJSXRuntime'
-            }
+            sourcemap: true
+            // globals: {
+            //     react: 'React',
+            //     'react-dom': 'ReactDOM',
+            //     'react/jsx-runtime': 'ReactJSXRuntime'
+            // }
     },
-    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client '],
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client', '@emotion/react', '@emotion/styled', '@mui/material'],
     plugins: [
         external(),
         // nodePolyfills({
