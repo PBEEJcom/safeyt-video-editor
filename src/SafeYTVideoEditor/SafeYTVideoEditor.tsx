@@ -34,6 +34,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [errorText, setErrorText] = useState<string>("");
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const playerContainer = useRef<HTMLDivElement>(null);
+  const previousSafeYTLink = useRef<string>('');
 
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
   const fullVideoDuration = Math.floor(player?.getDuration() || 0);
@@ -306,7 +307,11 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
   useEffect(() => {
     console.log("AE the link changed")
-    props.onSafeYTLinkChange(YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration}))
+    const newLink = YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration});
+    if (newLink !== previousSafeYTLink.current) {
+      previousSafeYTLink.current = newLink;
+      props.onSafeYTLinkChange(newLink);
+    }
   }, [endingSkip?.start, fullVideoDuration, props, skips, startingSkip?.end, videoId])
 
   return (
