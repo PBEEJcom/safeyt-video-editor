@@ -41,9 +41,11 @@ A YouTube or SafeYT link for viewing or editing.
 
 `onSafeYTLinkChange`
 
-This hook is called by the component whenever the output SafeYT link is changed. You most likely want to pass in a setter in order to keep track of what the SafeYT link is so it can be exported by a user after editing is complete. This hook has little meaning - but is called nonetheless - when `isEditMode` is `false`.
+This hook is called by the component whenever the output SafeYT link is changed. You most likely want to pass in a setter in order to keep track of what the SafeYT link is so it can be exported by a user after editing is complete. This hook has little meaning - but can be called nonetheless - when `isEditMode` is `false`.
 
 ## Releases
+### 2.0.5
+- Reduced the frequency with which `onSafeYTLinkChange` is called to reduce infinite render update issues
 ### 2.0.0
 - Downgrade to React 17 for compatibility with React 17 applications.
 ### 1.1.0

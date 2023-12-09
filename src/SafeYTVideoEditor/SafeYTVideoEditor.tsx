@@ -304,7 +304,10 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     setIsEditingBounds(false)
   }
 
-  props.onSafeYTLinkChange(YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration}))
+  useEffect(() => {
+    console.log("AE the link changed")
+    props.onSafeYTLinkChange(YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration}))
+  }, [endingSkip?.start, fullVideoDuration, props, skips, startingSkip?.end, videoId])
 
   return (
     <div className='flex flex-auto items-center justify-center flex-col p-3'>
