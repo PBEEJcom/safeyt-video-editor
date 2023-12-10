@@ -384,6 +384,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                   <div className="relative top-[-27px] h-0" style={{width: props.width}}>
                     <Slider
                       disableSwap
+                      color="info"
                       size="small"
                       value={[skip.start, skip.end]}
                       min={0}
