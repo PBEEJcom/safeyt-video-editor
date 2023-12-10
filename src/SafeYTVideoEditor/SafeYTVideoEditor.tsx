@@ -306,7 +306,6 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }
 
   useEffect(() => {
-    console.log("AE the link changed")
     const newLink = YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration});
     if (newLink !== previousSafeYTLink.current) {
       previousSafeYTLink.current = newLink;
@@ -369,7 +368,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                 <div className="relative top-[-27px] h-0" style={{width: props.width}}>
                   <Slider
                     disableSwap
-                    color='secondary'
+                    color='info'
                     size="small"
                     value={[startingSkip ? startingSkip.end : 0, endingSkip ? endingSkip.start : fullVideoDuration]}
                     min={0}
@@ -399,7 +398,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
             <Stack direction="row" spacing={1} className='items-start'>
               <Stack>
                 <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
-                  <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "primary" : "default"}>
+                  <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "info" : "default"}>
                     { isEditingBounds ? <CheckIcon /> : <ContentCropIcon /> }
                   </IconButton>
                 </Tooltip>
@@ -428,7 +427,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                   </IconButton>
                 </Tooltip>
                 : <Tooltip title="Done" arrow placement="right">
-                  <IconButton color="primary" onClick={cancelSkipEdit}>
+                  <IconButton color="info" onClick={cancelSkipEdit}>
                     <CheckIcon />
                   </IconButton>
                 </Tooltip> }
