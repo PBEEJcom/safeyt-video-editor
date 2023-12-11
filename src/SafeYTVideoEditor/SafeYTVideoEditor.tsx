@@ -230,7 +230,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     handleEditSkip(newSkips.length - 1, false)
   }
 
-  const playVideo = useCallback(() => {
+  const playVideo = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     player?.playVideo();
   }, [player]);
 
