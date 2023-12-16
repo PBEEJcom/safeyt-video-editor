@@ -134,7 +134,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
   useEffect(() => {
     seekVideoTo(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.player])
+  }, [props.player, props.player?.getVideoUrl()])
 
   return (
     <div className={`edit-scrubber-container flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
