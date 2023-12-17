@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import { TimeSegment } from '../Utils/YouTube';
+import YouTube, { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
 import './PlaybackScrubber.css';
 import useStableCallback from '../Hooks/useStableCallback';
@@ -168,6 +168,17 @@ const EditorControlBar = (props: VideoControlsProps) => {
       window.clearInterval(updateInterval);
     };
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
+
+  useEffect(() => {
+    props.player?.pauseVideo();
+    seekVideoTo(0);
+    
+    const videoId = YouTube.extractVideoId(props.player?.getVideoUrl() || "");
+    if (videoId) {
+      console.log(videoId)
+      props.player?.cueVideoById(videoId);
+    } 
+  }, [props.player])
 
   return (
     <div className={`video-controls ${isPlaying ? 'is-playing' : 'is-paused'}`}>

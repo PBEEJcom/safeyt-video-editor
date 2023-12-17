@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import { TimeSegment } from '../Utils/YouTube';
+import YouTube, { TimeSegment } from '../Utils/YouTube';
 import './EditorControlBar.css';
 import useStableCallback from '../Hooks/useStableCallback';
 import { Tooltip } from '@mui/material';
@@ -132,9 +132,15 @@ const EditorControlBar = (props: VideoControlsProps) => {
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
 
   useEffect(() => {
+    props.player?.pauseVideo();
     seekVideoTo(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.player, props.player?.getVideoUrl()])
+    
+    const videoId = YouTube.extractVideoId(props.player?.getVideoUrl() || "");
+    if (videoId) {
+      console.log(videoId)
+      props.player?.cueVideoById(videoId);
+    } 
+  }, [props.player])
 
   return (
     <div className={`edit-scrubber-container flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>
