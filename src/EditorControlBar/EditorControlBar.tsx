@@ -140,6 +140,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
       console.log(videoId)
       props.player?.cueVideoById(videoId);
     } 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.player])
 
   return (
