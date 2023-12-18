@@ -123,7 +123,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           iv_load_policy: 3,
           cc_load_policy: 1,
           modestbranding: 1,
-          playsinline: 1,
+          playsinline: props.isEditMode ? 1 : 0,
           rel: 0,
           controls: 0,
           autoplay: 0,
@@ -308,13 +308,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
   useEffect(() => {
     const newLink = YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration});
-    console.log("SYT new link is", newLink)
     if (newLink !== previousSafeYTLink.current) {
-      console.log("SYT emitting new link since", newLink, "!==", previousSafeYTLink.current)
       previousSafeYTLink.current = newLink;
       props.onSafeYTLinkChange(newLink);
-    } else {
-      console.log("SYT will not emit since link has not changed")
     }
   }, [endingSkip?.start, fullVideoDuration, props, skips, startingSkip?.end, videoId])
 
