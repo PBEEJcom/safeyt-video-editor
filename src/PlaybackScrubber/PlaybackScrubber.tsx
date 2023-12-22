@@ -175,8 +175,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
     
     const videoId = YouTube.extractVideoId(props.player?.getVideoUrl() || "");
     if (videoId) {
-      console.log(videoId)
-      props.player?.cueVideoById(videoId);
+      props.player?.cueVideoById(videoId, props.startingOffset);
     } 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.player])
