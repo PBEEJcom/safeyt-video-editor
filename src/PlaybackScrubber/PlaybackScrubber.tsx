@@ -54,6 +54,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const getCurrentSkip = (time: number): TimeSegment | undefined => {
     if (props.skips) {
+      // YouTube's mobile native player can allow negative times if user scrubs to before the configured `start`
+      if (time < 0) {
+        return { start: time, end: 0, isAtBounds: true } as TimeSegment
+      }
       return props.skips.find(skip => skip.start <= time && time < skip.end)
     }
     return;
