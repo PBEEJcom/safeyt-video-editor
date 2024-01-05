@@ -31,7 +31,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
       if (currentTime >= Math.floor(duration) && scrubber.current) {
         scrubber.current.value = '0';
         props.player?.pauseVideo();
-        props.player?.seekTo(0, true);
+        props.player?.seekTo(0, false);
       }
     },
     [duration, props.player]
@@ -142,6 +142,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
         props.player?.seekTo(0, true);
       } else if (event.data === YT.PlayerState.PLAYING) {
         checkForEdits(getCurrentTime());
+        if (currentTime >= Math.floor(duration) && scrubber.current) {
+          seekVideoTo(0)
+          props.player?.playVideo();
+        }
       }
     }, [checkForEdits, duration, props.player]
   )
