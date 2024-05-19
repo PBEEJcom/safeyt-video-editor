@@ -12,14 +12,33 @@ const axiosInstance = axios.create({
 
 export default class YouTube {
   private static safeYTBaseUrl = "https://safeyt.pbeej.com";
+
   // eslint-disable-next-line
-  private static youTubeLinkRegex = /^(https?:)?(\/\/)?((www\.|m\.)?youtube(-nocookie)?\.com\/((watch)?\?(feature=\w*&)?vi?=|embed\/|vi?\/|e\/)|youtu.be\/)([\w\-]{10,20})/i
+  private static youTubeLinkRegexes = [
+    // Regex designed to match standard youtube links
+    // https://www.youtube.com/watch?app=desktop&v=83ac8WGbA60
+    // https://www.youtubekids.com/watch?v=gFq9ZqXD1JA
+    // https://m.youtube.com/watch?si=ln6_lBR0S9xrHpey&v=gtYw0Gwaxrc&feature=youtu.be
+    // https://www.youtube.com/watch?app=desktop&v=w3jreuX_7HI
+    // https://www.youtube.com/watch?app=desktop&v=Vyga8VMWXKg
+    // https://www.youtube.com/watch?v=5uKmqP3kQ2A&ab_channel=driving4answers
+    // https://m.youtube.com/watch?si=ln6_lBR0S9xrHpey&v=gtYw0Gwaxrc&feature=youtu.be
+    // https://www.youtube-nocookie.com/watch?v=5uKmqP3kQ2AEnter
+    /^(https?:)?(\/\/)?((www\.|m\.)?youtube(-nocookie|kids)?\.com\/((watch)?.*?v=(?<videoId>.*?(&|$))))/i,
+
+    // Designed to match short youtube links
+    // https://youtu.be/4EZfXqc;Ug6E
+    /^(https?:)?(\/\/)?((www\.|m\.)?youtu.be\/)(?<videoId>[\w\-]{10,20})/i
+  ]
 
   static extractVideoId(youTubeUrl: string): string | undefined {
-    const match = youTubeUrl.match(this.youTubeLinkRegex);
-    if (match) {
-      return match[9];
+    for (const regex of this.youTubeLinkRegexes) {
+      const match = youTubeUrl.match(regex);
+      if (match) {
+        return match.groups?.videoId;
+      }
     }
+
     return undefined;
   }
 
@@ -58,7 +77,7 @@ export default class YouTube {
   }
 
   static isValidYouTubeLink(youTubeLink: string) {
-    return !!youTubeLink.match(this.youTubeLinkRegex);
+    return this.youTubeLinkRegexes.some(regex => !!youTubeLink.match(regex));
   }
 
   static isValidSafeYTLink(link: string) {
