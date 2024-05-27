@@ -125,7 +125,8 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
           iv_load_policy: 3,
           cc_load_policy: 1,
           modestbranding: 1,
-          playsinline: props.isEditMode ? YT.PlaysInline.Inline : YT.PlaysInline.Fullscreen,
+          // playsinline: props.isEditMode ? YT.PlaysInline.Inline : YT.PlaysInline.Fullscreen,
+          playsinline: YT.PlaysInline.Fullscreen,
           rel: 0,
           controls: 0,
           autoplay: 0,
@@ -138,7 +139,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
         },
       });
     });
-  }, [videoId, onPlayerReady, onPlayerStateChange, props.isEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [videoId, onPlayerReady, onPlayerStateChange]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkForSkipCollisionsAndUpdateSkips = (
     newSkips: TimeSegment[],
