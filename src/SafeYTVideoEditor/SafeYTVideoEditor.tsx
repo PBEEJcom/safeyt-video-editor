@@ -1,18 +1,18 @@
-import { IconButton, Stack, Fade, Zoom, Tooltip, Collapse, Alert } from '@mui/material';
-import Slider from '@mui/material/Slider';
-import PauseIcon from '@mui/icons-material/Pause';
-import ContentCutIcon from '@mui/icons-material/ContentCutTwoTone';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ContentCropIcon from '@mui/icons-material/Crop';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import YouTube, { TimeSegment } from '../Utils/YouTube';
-import { getFormattedTime, parseFormattedTime } from '../Utils/Time';
-import React from 'react';
-import EditorControlBar from '../EditorControlBar/EditorControlBar';
-import PlaybackScrubber from '../PlaybackScrubber/PlaybackScrubber';
-import './SafeYTVideoEditor.css';
-import Delete from '@mui/icons-material/Delete';
-import CheckIcon from '@mui/icons-material/Check';
+import { IconButton, Stack, Fade, Zoom, Tooltip, Collapse, Alert } from "@mui/material";
+import Slider from "@mui/material/Slider";
+import PauseIcon from "@mui/icons-material/Pause";
+import ContentCutIcon from "@mui/icons-material/ContentCutTwoTone";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import ContentCropIcon from "@mui/icons-material/Crop";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import YouTube, { TimeSegment } from "../Utils/YouTube";
+import { getFormattedTime, parseFormattedTime } from "../Utils/Time";
+import React from "react";
+import EditorControlBar from "../EditorControlBar/EditorControlBar";
+import PlaybackScrubber from "../PlaybackScrubber/PlaybackScrubber";
+import "./SafeYTVideoEditor.css";
+import Delete from "@mui/icons-material/Delete";
+import CheckIcon from "@mui/icons-material/Check";
 
 export interface SafeYTDialogProps {
   isEditMode: boolean;
@@ -34,14 +34,14 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   const [errorText, setErrorText] = useState<string>("");
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const playerContainer = useRef<HTMLDivElement>(null);
-  const previousSafeYTLink = useRef<string>('');
+  const previousSafeYTLink = useRef<string>("");
 
   const isPlaying = !!player && playerState === YT.PlayerState.PLAYING;
   const fullVideoDuration = Math.floor(player?.getDuration() || 0);
   const editedVideoDuration = (endingSkip?.start || fullVideoDuration) - (startingSkip?.end || 0);
 
   const allSkips = useMemo(() => {
-    const value = [...skips]
+    const value = [...skips];
 
     if (startingSkip) {
       value.push(startingSkip);
@@ -52,7 +52,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     }
 
     return value;
-  }, [skips, startingSkip, endingSkip])
+  }, [skips, startingSkip, endingSkip]);
 
   const onPlayerReady = useCallback((event: YT.PlayerEvent) => {
     setPlayer(event.target);
@@ -63,7 +63,7 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   }, []);
 
   useEffect(() => {
-    setErrorText("")
+    setErrorText("");
     if (YouTube.isValidYouTubeLink(props.link)) {
       setVideoId(YouTube.extractVideoId(props.link) || "");
       setStartingSkip(undefined);
@@ -79,25 +79,27 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
         if (safeYTData.videoBounds?.start) {
           setStartingSkip({ start: 0, end: parseFormattedTime(safeYTData.videoBounds.start), isAtBounds: true });
         } else {
-          setStartingSkip(undefined)
+          setStartingSkip(undefined);
         }
         if (safeYTData.videoBounds?.end) {
           setEndingSkip({ start: parseFormattedTime(safeYTData.videoBounds.end), end: Infinity, isAtBounds: true });
         } else {
-          setEndingSkip(undefined)
+          setEndingSkip(undefined);
         }
 
-        const stOffset = props.isEditMode ? 0 : parseFormattedTime(safeYTData.videoBounds?.start || '0');
-        setSkips(safeYTData.skips.map(skip => ({ start: parseFormattedTime(skip.start) - stOffset, end: parseFormattedTime(skip.end) - stOffset })));
+        const stOffset = props.isEditMode ? 0 : parseFormattedTime(safeYTData.videoBounds?.start || "0");
+        setSkips(
+          safeYTData.skips.map((skip) => ({ start: parseFormattedTime(skip.start) - stOffset, end: parseFormattedTime(skip.end) - stOffset })),
+        );
         setIsEditingBounds(false);
         setSkipEditingIndex(undefined);
         setPlayerState(-1);
       } catch (error) {
         console.error("There was an error parsing the safeYT video link", error);
-        setErrorText("Invalid SafeYT link")
+        setErrorText("Invalid SafeYT link");
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.link]);
 
   useEffect(() => {
@@ -111,66 +113,69 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       player?.destroy();
 
       new YT.Player(`player-${props.link}`, {
-        height: '100%',
-        width: '100%',
+        height: "100%",
+        width: "100%",
         videoId: videoId,
-        host: 'https://www.youtube-nocookie.com',
+        host: "https://www.youtube-nocookie.com",
         events: {
           onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange
+          onStateChange: onPlayerStateChange,
         },
         playerVars: {
           iv_load_policy: 3,
           cc_load_policy: 1,
           modestbranding: 1,
-          playsinline: 1,
+          playsinline: props.isEditMode ? YT.PlaysInline.Inline : YT.PlaysInline.Fullscreen,
           rel: 0,
           controls: 0,
           autoplay: 0,
           disablekb: 1,
           fs: 0,
-          origin: 'https://pbeej.com',
+          origin: "https://pbeej.com",
           mute: 0,
-          start: (startingSkip && !props.isEditMode) ? startingSkip.end : undefined,
-          end: (endingSkip && !props.isEditMode) ? endingSkip.start : undefined,
+          start: startingSkip && !props.isEditMode ? startingSkip.end : undefined,
+          end: endingSkip && !props.isEditMode ? endingSkip.start : undefined,
         },
       });
     });
-  }, [videoId, onPlayerReady, onPlayerStateChange]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [videoId, onPlayerReady, onPlayerStateChange, props.isEditMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
-  const checkForSkipCollisionsAndUpdateSkips = (newSkips: TimeSegment[], newStartingSkip: TimeSegment | undefined, newEndingSkip: TimeSegment | undefined) => {
-      newSkips.forEach((skip, index) => {
-        newSkips.forEach(cs => {
-          if (cs.start < skip.end && cs.end > skip.end) {
-            newSkips[index].end = cs.start;
-          }
-        });
-
-        if (newStartingSkip && newStartingSkip.end > skip.start && newStartingSkip.end < skip.end) {
-          newSkips[index].start = newStartingSkip.end
-        }
-
-        if (newEndingSkip && newEndingSkip.start < skip.end && newEndingSkip.start > skip.start) {
-          newSkips[index].end = newEndingSkip.start
+  const checkForSkipCollisionsAndUpdateSkips = (
+    newSkips: TimeSegment[],
+    newStartingSkip: TimeSegment | undefined,
+    newEndingSkip: TimeSegment | undefined,
+  ) => {
+    newSkips.forEach((skip, index) => {
+      newSkips.forEach((cs) => {
+        if (cs.start < skip.end && cs.end > skip.end) {
+          newSkips[index].end = cs.start;
         }
       });
 
-      setSkips(newSkips);
-      setStartingSkip(newStartingSkip);
-      setEndingSkip(newEndingSkip);
-  }
+      if (newStartingSkip && newStartingSkip.end > skip.start && newStartingSkip.end < skip.end) {
+        newSkips[index].start = newStartingSkip.end;
+      }
+
+      if (newEndingSkip && newEndingSkip.start < skip.end && newEndingSkip.start > skip.start) {
+        newSkips[index].end = newEndingSkip.start;
+      }
+    });
+
+    setSkips(newSkips);
+    setStartingSkip(newStartingSkip);
+    setEndingSkip(newEndingSkip);
+  };
 
   const onToggleFullscreen = async () => {
     if (playerContainer.current) {
       // eslint-disable-next-line
       // @ts-ignore
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (document.fullscreenElement || document.webkitFullscreenElement || isFullscreen) {
         try {
           if (document.exitFullscreen) {
             await document.exitFullscreen();
-          // eslint-disable-next-line
-          // @ts-ignore
+            // eslint-disable-next-line
+            // @ts-ignore
           } else if (document.webkitExitFullscreen) {
             // eslint-disable-next-line
             // @ts-ignore
@@ -189,7 +194,6 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
             // eslint-disable-next-line
             // @ts-ignore
           } else if (playerContainer.current.webkitRequestFullscreen) {
-
             // eslint-disable-next-line
             // @ts-ignore
             playerContainer.current.webkitRequestFullscreen();
@@ -200,21 +204,21 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
         }
       }
     }
-  }
+  };
 
   const deleteSkipBeingEdited = () => {
     if (skipEditingIndex !== undefined) {
       let newSkips = [...skips];
-      newSkips.splice(skipEditingIndex, 1)
-      setSkips(newSkips)
-      setSkipEditingIndex(undefined)
+      newSkips.splice(skipEditingIndex, 1);
+      setSkips(newSkips);
+      setSkipEditingIndex(undefined);
     }
-  }
+  };
 
   const cancelSkipEdit = () => {
-    setSkipEditingIndex(undefined)
-    setIsEditingBounds(false)
-  }
+    setSkipEditingIndex(undefined);
+    setIsEditingBounds(false);
+  };
 
   const addDefaultSkip = () => {
     const startTimeSeconds = (player?.getCurrentTime() || 0) + 1;
@@ -222,18 +226,21 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
 
     const newSkip = {
       start: startTimeSeconds,
-      end: endTimeSeconds
-    }
+      end: endTimeSeconds,
+    };
 
     const newSkips = skips.concat(newSkip);
     checkForSkipCollisionsAndUpdateSkips(newSkips, startingSkip, endingSkip);
-    handleEditSkip(newSkips.length - 1, false)
-  }
+    handleEditSkip(newSkips.length - 1, false);
+  };
 
-  const playVideo = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    player?.playVideo();
-  }, [player]);
+  const playVideo = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      player?.playVideo();
+    },
+    [player],
+  );
 
   const pauseVideo = useCallback(() => {
     player?.pauseVideo();
@@ -243,12 +250,12 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     if (isPlaying) {
       player?.pauseVideo();
     }
-  }
+  };
 
   const toggleEditBounds = () => {
     setIsEditingBounds(!isEditingBounds);
     setSkipEditingIndex(undefined);
-  }
+  };
 
   const handleEditSkip = (index: number, isEditingBounds: boolean) => {
     if (isEditingBounds) {
@@ -257,18 +264,18 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
       setSkipEditingIndex(index);
       setIsEditingBounds(false);
     }
-  }
+  };
 
   const handleChangeVideoBounds = (event: React.SyntheticEvent | Event, value: number | number[]) => {
     if (!player) {
       return;
     }
 
-    const newBoundsArray = value as number[]
+    const newBoundsArray = value as number[];
 
     // enforce minimum distance of 1s
     if (newBoundsArray[1] - newBoundsArray[0] < 1) {
-      newBoundsArray[0] = newBoundsArray[1] - 1
+      newBoundsArray[0] = newBoundsArray[1] - 1;
     }
 
     const newStart = newBoundsArray[0];
@@ -277,17 +284,17 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
     const newStartingSkip = {
       start: 0,
       end: newStart,
-      isAtBounds: true
-    }
+      isAtBounds: true,
+    };
 
     const newEndingSkip = {
       start: newEnd,
       // end: fullVideoDuration,
       end: Infinity,
-      isAtBounds: true
-    }
+      isAtBounds: true,
+    };
 
-    checkForSkipCollisionsAndUpdateSkips(skips, newStartingSkip, newEndingSkip)
+    checkForSkipCollisionsAndUpdateSkips(skips, newStartingSkip, newEndingSkip);
   };
 
   const handleChangeSkipBounds = (event: React.SyntheticEvent | Event, value: number | number[], index: number) => {
@@ -301,49 +308,46 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   };
 
   const deleteBounds = () => {
-    setStartingSkip(undefined)
-    setEndingSkip(undefined)
-    setIsEditingBounds(false)
-  }
+    setStartingSkip(undefined);
+    setEndingSkip(undefined);
+    setIsEditingBounds(false);
+  };
 
   useEffect(() => {
-    const newLink = YouTube.getSafeYtLink(videoId, skips, {start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration});
+    const newLink = YouTube.getSafeYtLink(videoId, skips, { start: startingSkip?.end || 0, end: endingSkip?.start || fullVideoDuration });
     if (newLink !== previousSafeYTLink.current) {
       previousSafeYTLink.current = newLink;
       props.onSafeYTLinkChange(newLink);
     }
-  }, [endingSkip?.start, fullVideoDuration, props, skips, startingSkip?.end, videoId])
+  }, [endingSkip?.start, fullVideoDuration, props, skips, startingSkip?.end, videoId]);
 
   return (
-    <div className='flex flex-auto items-center justify-center flex-col p-3'>
+    <div className="flex flex-auto items-center justify-center flex-col p-3">
       {videoId && (
         <>
-          <div style={{width: props.width, height: props.height}}>
-            <div ref={playerContainer} className='flex align-center justify-center overflow-hidden bg-black relative h-full'>
-              <div className='h-full w-full relative overflow-hidden'>
+          <div style={{ width: props.width, height: props.height }}>
+            <div ref={playerContainer} className="flex align-center justify-center overflow-hidden bg-black relative h-full">
+              <div className="h-full w-full relative overflow-hidden">
                 <div id={`player-${props.link}`} className="player" />
               </div>
 
-              <div className={`absolute top-0 h-full w-full flex flex-col video-control-overly ${isPlaying ? 'is-playing' : 'is-paused'}`}>
-                <div className='flex items-center justify-center flex-auto' onClick={handleOverlayClick}>
+              <div className={`absolute top-0 h-full w-full flex flex-col video-control-overly ${isPlaying ? "is-playing" : "is-paused"}`}>
+                <div className="flex items-center justify-center flex-auto" onClick={handleOverlayClick}>
                   {!isPlaying && (
-                    <button className={`w-[70px] h-[48px] ${props.isEditMode ? '' : 'mt-[51px]'} rounded-[10px] bg-[#BC335B] flex items-center justify-center`} onClick={playVideo}>
-                      <svg
-                        className='mr-[2px]'
-                        xmlns='http://www.w3.org/2000/svg'
-                        height='35px'
-                        viewBox='0 0 24 24'
-                        width='35px'
-                        fill='#FFFFFF'
-                      >
-                        <path d='M0 0h24v24H0z' fill='none' />
-                        <path d='M8 5v14l11-7z' />
+                    <button
+                      className={`w-[70px] h-[48px] ${props.isEditMode ? "" : "mt-[51px]"} rounded-[10px] bg-[#BC335B] flex items-center justify-center`}
+                      onClick={playVideo}
+                    >
+                      <svg className="mr-[2px]" xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 0 24 24" width="35px" fill="#FFFFFF">
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                     </button>
                   )}
                 </div>
 
-                {!props.isEditMode ? <PlaybackScrubber
+                {!props.isEditMode ? (
+                  <PlaybackScrubber
                     isFullscreen={isFullscreen}
                     duration={editedVideoDuration}
                     startingOffset={startingSkip?.end || 0}
@@ -351,38 +355,36 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                     skips={skips}
                     playerState={playerState}
                     onToggleFullscreen={onToggleFullscreen}
-                /> : undefined}
+                  />
+                ) : undefined}
               </div>
             </div>
           </div>
           {props.isEditMode ? (
-          <>
-            <div className="relative" style={{width: props.width}}>
-              <EditorControlBar
-                  player={player}
-                  skips={allSkips}
-                  playerState={playerState}
-                  handleEditSkip={handleEditSkip}
-              />
-            </div>
-            <Fade in={isEditingBounds}>
-                <div className="relative top-[-27px] h-0" style={{width: props.width}}>
+            <>
+              <div className="relative" style={{ width: props.width }}>
+                <EditorControlBar player={player} skips={allSkips} playerState={playerState} handleEditSkip={handleEditSkip} />
+              </div>
+              <Fade in={isEditingBounds}>
+                <div className="relative top-[-27px] h-0" style={{ width: props.width }}>
                   <Slider
                     disableSwap
-                    color='info'
+                    color="info"
                     size="small"
                     value={[startingSkip ? startingSkip.end : 0, endingSkip ? endingSkip.start : fullVideoDuration]}
                     min={0}
                     max={fullVideoDuration}
                     onChange={handleChangeVideoBounds}
                     valueLabelDisplay="auto"
-                    valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
+                    valueLabelFormat={(value: number) => {
+                      return getFormattedTime(value);
+                    }}
                   />
                 </div>
               </Fade>
               {skips.map((skip, index) => (
                 <Fade in={skipEditingIndex === index}>
-                  <div className="relative top-[-27px] h-0" style={{width: props.width}}>
+                  <div className="relative top-[-27px] h-0" style={{ width: props.width }}>
                     <Slider
                       disableSwap
                       color="info"
@@ -392,61 +394,66 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
                       max={fullVideoDuration}
                       onChange={(event, value) => handleChangeSkipBounds(event, value, index)}
                       valueLabelDisplay="auto"
-                      valueLabelFormat={(value: number) => {return getFormattedTime(value)}}
+                      valueLabelFormat={(value: number) => {
+                        return getFormattedTime(value);
+                      }}
                     />
                   </div>
                 </Fade>
               ))}
-            <Stack direction="row" spacing={1} className='items-start'>
-              <Stack>
-                <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
-                  <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "info" : "default"}>
-                    { isEditingBounds ? <CheckIcon /> : <ContentCropIcon /> }
-                  </IconButton>
-                </Tooltip>
-                <Zoom in={isEditingBounds}>
-                  <Tooltip title="Remove" arrow placement="left">
-                    <IconButton onClick={deleteBounds} color="error">
-                      <Delete />
+              <Stack direction="row" spacing={1} className="items-start">
+                <Stack>
+                  <Tooltip title={isEditingBounds ? "Done" : "Trim"} arrow placement="left">
+                    <IconButton onClick={toggleEditBounds} color={isEditingBounds ? "info" : "default"}>
+                      {isEditingBounds ? <CheckIcon /> : <ContentCropIcon />}
                     </IconButton>
                   </Tooltip>
-                </Zoom>
-              </Stack>
-              {isPlaying ?
-                <IconButton onClick={pauseVideo}>
-                  <PauseIcon />
-                </IconButton>
-                : <IconButton onClick={playVideo}>
+                  <Zoom in={isEditingBounds}>
+                    <Tooltip title="Remove" arrow placement="left">
+                      <IconButton onClick={deleteBounds} color="error">
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </Zoom>
+                </Stack>
+                {isPlaying ? (
+                  <IconButton onClick={pauseVideo}>
+                    <PauseIcon />
+                  </IconButton>
+                ) : (
+                  <IconButton onClick={playVideo}>
                     <PlayArrowIcon />
                   </IconButton>
-              }
+                )}
 
-              <Stack>
-                {skipEditingIndex === undefined ?
-                <Tooltip title="New Skip" arrow placement="right">
-                  <IconButton onClick={addDefaultSkip}>
-                    <ContentCutIcon />
-                  </IconButton>
-                </Tooltip>
-                : <Tooltip title="Done" arrow placement="right">
-                  <IconButton color="info" onClick={cancelSkipEdit}>
-                    <CheckIcon />
-                  </IconButton>
-                </Tooltip> }
-                <Zoom in={skipEditingIndex !== undefined}>
-                  <Tooltip title="Remove" arrow placement="right">
-                    <IconButton onClick={deleteSkipBeingEdited} color="error">
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
-                </Zoom>
+                <Stack>
+                  {skipEditingIndex === undefined ? (
+                    <Tooltip title="New Skip" arrow placement="right">
+                      <IconButton onClick={addDefaultSkip}>
+                        <ContentCutIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Done" arrow placement="right">
+                      <IconButton color="info" onClick={cancelSkipEdit}>
+                        <CheckIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <Zoom in={skipEditingIndex !== undefined}>
+                    <Tooltip title="Remove" arrow placement="right">
+                      <IconButton onClick={deleteSkipBeingEdited} color="error">
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </Zoom>
+                </Stack>
               </Stack>
-            </Stack>
-            <Collapse in={!!errorText} className='absolute'>
-              <Alert severity="error">{errorText}</Alert>
-            </Collapse>
-          </>
-        ) : undefined}
+              <Collapse in={!!errorText} className="absolute">
+                <Alert severity="error">{errorText}</Alert>
+              </Collapse>
+            </>
+          ) : undefined}
         </>
       )}
     </div>
