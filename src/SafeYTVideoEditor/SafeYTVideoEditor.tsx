@@ -168,7 +168,11 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
   };
 
   const onToggleFullscreen = async () => {
+    console.log("toggle fullscreen", !!playerContainer.current);
     if (playerContainer.current) {
+      // eslint-disable-next-line
+      // @ts-ignore
+      console.log("Fullscreen element", document.fullscreenElement, document.webkitFullscreenElement, isFullscreen);
       // eslint-disable-next-line
       // @ts-ignore
       if (document.fullscreenElement || document.webkitFullscreenElement || isFullscreen) {
@@ -188,6 +192,9 @@ const SafeYTVideoEditor = (props: SafeYTDialogProps) => {
         }
       } else {
         try {
+          // eslint-disable-next-line
+          // @ts-ignore
+          console.log("Request fullscreen", playerContainer.current.requestFullscreen, playerContainer.current.webkitRequestFullscreen);
           if (playerContainer.current.requestFullscreen) {
             await playerContainer.current.requestFullscreen();
             setIsFullscreen(true);
