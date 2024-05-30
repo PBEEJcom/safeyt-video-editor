@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import { TimeSegment } from '../Utils/YouTube';
-import React from 'react';
+import YouTube, { TimeSegment } from '../Utils/YouTube';
 import './EditorControlBar.css';
 import useStableCallback from '../Hooks/useStableCallback';
 import { Tooltip } from '@mui/material';
@@ -27,7 +26,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
     (currentTime: number) => {
       if (currentTime >= Math.floor(duration) && scrubber.current) {
         scrubber.current.value = duration.toString();
-        props.player?.seekTo(0, true);
+        props.player?.seekTo(0, false);
         props.player?.pauseVideo();
       }
     },
@@ -102,6 +101,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
         props.player?.pauseVideo();
       } else if (event.data === YT.PlayerState.PLAYING) {
         checkForEdits(props.player?.getCurrentTime() || 0);
+        if (currentTime >= Math.floor(duration) && scrubber.current) {
+          seekVideoTo(0)
+          props.player?.playVideo();
+        }
       }
     }, [checkForEdits, duration, props.player]
   )
@@ -131,6 +134,18 @@ const EditorControlBar = (props: VideoControlsProps) => {
       window.clearInterval(updateInterval);
     };
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
+
+  useEffect(() => {
+    props.player?.pauseVideo();
+    seekVideoTo(0);
+    
+    const videoId = YouTube.extractVideoId(props.player?.getVideoUrl() || "");
+    if (videoId) {
+      console.log(videoId)
+      props.player?.cueVideoById(videoId);
+    } 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.player])
 
   return (
     <div className={`edit-scrubber-container flex flex-col w-full flex-[0_0_51px] transition-opacity duration-700}`}>

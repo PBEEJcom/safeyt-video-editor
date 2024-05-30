@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFormattedTime } from '../Utils/Time';
 import { useMediaQuery } from 'react-responsive';
-import { TimeSegment } from '../Utils/YouTube';
+import YouTube, { TimeSegment } from '../Utils/YouTube';
 import React from 'react';
 import './PlaybackScrubber.css';
 import useStableCallback from '../Hooks/useStableCallback';
@@ -31,7 +31,7 @@ const EditorControlBar = (props: VideoControlsProps) => {
       if (currentTime >= Math.floor(duration) && scrubber.current) {
         scrubber.current.value = '0';
         props.player?.pauseVideo();
-        props.player?.seekTo(0, true);
+        props.player?.seekTo(0, false);
       }
     },
     [duration, props.player]
@@ -54,6 +54,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const getCurrentSkip = (time: number): TimeSegment | undefined => {
     if (props.skips) {
+      // YouTube's mobile native player can allow negative times if user scrubs to before the configured `start`
+      if (time < 0) {
+        return { start: time, end: 0, isAtBounds: true } as TimeSegment
+      }
       return props.skips.find(skip => skip.start <= time && time < skip.end)
     }
     return;
@@ -138,6 +142,10 @@ const EditorControlBar = (props: VideoControlsProps) => {
         props.player?.seekTo(0, true);
       } else if (event.data === YT.PlayerState.PLAYING) {
         checkForEdits(getCurrentTime());
+        if (currentTime >= Math.floor(duration) && scrubber.current) {
+          seekVideoTo(0)
+          props.player?.playVideo();
+        }
       }
     }, [checkForEdits, duration, props.player]
   )
@@ -168,6 +176,17 @@ const EditorControlBar = (props: VideoControlsProps) => {
       window.clearInterval(updateInterval);
     };
   }, [isPlaying, props.player, duration, checkForEndOfVideo, checkForEdits, isMobile, props.playerState, tick, currentTime, onPlayerStateChangeEvent]);
+
+  useEffect(() => {
+    props.player?.pauseVideo();
+    seekVideoTo(0);
+    
+    const videoId = YouTube.extractVideoId(props.player?.getVideoUrl() || "");
+    if (videoId) {
+      props.player?.cueVideoById(videoId, props.startingOffset);
+    } 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.player])
 
   return (
     <div className={`video-controls ${isPlaying ? 'is-playing' : 'is-paused'}`}>

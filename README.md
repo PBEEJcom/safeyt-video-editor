@@ -44,6 +44,10 @@ A YouTube or SafeYT link for viewing or editing.
 This hook is called by the component whenever the output SafeYT link is changed. You most likely want to pass in a setter in order to keep track of what the SafeYT link is so it can be exported by a user after editing is complete. This hook has little meaning - but can be called nonetheless - when `isEditMode` is `false`.
 
 ## Releases
+### 2.1.3
+- Fix issue where the playback would get stuck at video end. Now pressing play again starts the video over, and still respects the skips.
+- Fix bug where starting skips did not take effect on mobile playback.
+- Support fullscreen and airplay integration using native controls. This allows scrubbing through skips.
 ### 2.0.5
 - Reduced the frequency with which `onSafeYTLinkChange` is called to reduce infinite render update issues
 ### 2.0.0
