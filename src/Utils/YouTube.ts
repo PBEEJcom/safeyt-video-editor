@@ -7,7 +7,7 @@ export interface TimeSegment {
 }
 
 const axiosInstance = axios.create({
-  baseURL: 'https://www.youtube.com/oembed',
+  baseURL: "https://www.youtube.com/oembed",
 });
 
 export default class YouTube {
@@ -24,12 +24,14 @@ export default class YouTube {
     // https://www.youtube.com/watch?v=5uKmqP3kQ2A&ab_channel=driving4answers
     // https://m.youtube.com/watch?si=ln6_lBR0S9xrHpey&v=gtYw0Gwaxrc&feature=youtu.be
     // https://www.youtube-nocookie.com/watch?v=5uKmqP3kQ2AEnter
-    /^(https?:)?(\/\/)?((www\.|m\.)?youtube(-nocookie|kids)?\.com\/((watch)?.*?v=(?<videoId>.*?(&|$))))/i,
+    // https://www.youtube.com/watch?v=sjxFJ5plpgY&ab_channel=NickSBF
+    /^(https?:)?(\/\/)?((www\.|m\.)?youtube(-nocookie|kids)?\.com\/((watch)?.*?v=(?<videoId>.*?))(&|$))/i,
 
     // Designed to match short youtube links
-    // https://youtu.be/4EZfXqc;Ug6E
-    /^(https?:)?(\/\/)?((www\.|m\.)?youtu.be\/)(?<videoId>[\w\-]{10,20})/i
-  ]
+    // https://youtu.be/sjxFJ5plpgY
+    // https://youtu.be/sjxFJ5plpgY?si=A0wdNWR12pXcpE2C
+    /^(https?:)?(\/\/)?((www\.|m\.)?youtu.be\/)(?<videoId>[\w\-]{5,20})/i,
+  ];
 
   static extractVideoId(youTubeUrl: string): string | undefined {
     for (const regex of this.youTubeLinkRegexes) {
@@ -44,20 +46,27 @@ export default class YouTube {
 
   static getEncodedSafeYTVideoInformation(videoId: string | undefined, skips: TimeSegment[], videoBounds: TimeSegment | undefined) {
     return btoa(
-      JSON.stringify({
-        videoId,
-        skips,
-        videoBounds,
-      }, (key, value) => {
-        if (typeof(value) === 'number') {
-          return value.toString()
-        }
-        return value;
-      })
-    )
+      JSON.stringify(
+        {
+          videoId,
+          skips,
+          videoBounds,
+        },
+        (key, value) => {
+          if (typeof value === "number") {
+            return value.toString();
+          }
+          return value;
+        },
+      ),
+    );
   }
 
-  static decodeSafeYTLink(safeYtLink: string): { videoId: string, skips: { start: string, end: string }[], videoBounds?: { start?: string, end?: string } } {
+  static decodeSafeYTLink(safeYtLink: string): {
+    videoId: string;
+    skips: { start: string; end: string }[];
+    videoBounds?: { start?: string; end?: string };
+  } {
     let encodedInformation: string;
     try {
       encodedInformation = atob(this.extractSafeYtEncodedInformation(safeYtLink));
@@ -69,15 +78,15 @@ export default class YouTube {
 
   static getSafeYtLink(youTubeVideoId: string, skips: TimeSegment[], videoBounds: TimeSegment | undefined) {
     const encodedVideoInformation = this.getEncodedSafeYTVideoInformation(youTubeVideoId, skips, videoBounds);
-    return `${this.safeYTBaseUrl}/embed/${encodedVideoInformation}`
+    return `${this.safeYTBaseUrl}/embed/${encodedVideoInformation}`;
   }
 
   static extractSafeYtEncodedInformation(safeYtLink: string) {
-    return safeYtLink.split('embed/')[1]
+    return safeYtLink.split("embed/")[1];
   }
 
   static isValidYouTubeLink(youTubeLink: string) {
-    return this.youTubeLinkRegexes.some(regex => !!youTubeLink.match(regex));
+    return this.youTubeLinkRegexes.some((regex) => !!youTubeLink.match(regex));
   }
 
   static isValidSafeYTLink(link: string) {
@@ -85,11 +94,11 @@ export default class YouTube {
   }
 
   static getVideoData(youTubeLink: string) {
-    return axiosInstance.get('/', {
+    return axiosInstance.get("/", {
       params: {
         url: youTubeLink,
-        format: 'json'
-      }
+        format: "json",
+      },
     });
   }
 }
